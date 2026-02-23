@@ -447,3 +447,8 @@ function force10Rotates() {
   }
   logSystem('⚡ <strong>Trigger Helper:</strong> block_rotate 이벤트 10회 즉시 전송 완료!', '#f59e0b');
 }
+
+function sendTriggerEvent() {
+  logEvent('trigger_event', { input_type: 'manual', current_score: score });
+  logSystem('🎯 <strong>Manual Trigger:</strong> trigger_event 이벤트 1회 전송 완료!', '#3b82f6');
+}
