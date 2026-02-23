@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkingData Story - Tetris Mode</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Dongle:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Thinking Analytics SDK BEGIN -->
+    <script src="./thinkingdata.umd.min.js"></script>
+    <script src="./tdcore.umd.min.js"></script>
+    <script src="./tdremoteconfig.umd.min.js"></script>
+    <script src="./tdstrategy.umd.min.js"></script>
+    <script>
+        window.__pendingTriggerMessages = [];
+        try {
+            if (!window.TDApp || typeof window.TDApp.init !== 'function') {
+                throw new Error('TDApp SDK not found');
+            }
+            window.TDApp.init({
+                appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
+                serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
+                enableLog: true,
+                debugMode: 'none',
+                send_method: 'ajax',
+                autoTrack: { pageShow: true, pageHide: true },
+                templates: [{ templateCode: 'td_strategy', mode: 'none' }],
+                triggerListener: function (result) {
+                    if (window.onTriggerMessage) {
+                        window.onTriggerMessage(result);
+                    } else {
+                        window.__pendingTriggerMessages.push(result);
+                    }
+                }
+            });
+            window.ta = window.tdanalytics2024 || window.thinkingdata;
+            if (window.ta && typeof window.ta.login === 'function') {
+                const testUserId = 'demo_tester_' + Math.floor(Math.random() * 100000);
+                window.ta.login(testUserId);
+            }
+            if (window.ta && typeof window.ta.quick === 'function') {
+                window.ta.quick('autoTrack');
+            }
+            console.log('TDApp Initialized');
+        } catch (e) {
+            console.error('SDK Init Failed:', e);
+        }
+        window.addEventListener('load', function () {
+            if (window.onSDKLoad) window.onSDKLoad();
+        });
+    </script>
+    <!-- Thinking Analytics SDK END -->
+</head>
+
+<body>
+    <div class="app-stage">
+        <!-- Game World -->
+        <main class="game-world" id="game-screen">
+            <div class="top-hud">
+                <div class="score-badge">SCORE: <span id="score">0</span></div>
+                <div class="score-badge">LINES: <span id="lines">0</span></div>
+            </div>
+
+            <div class="tetris-container">
+                <canvas id="tetris" width="240" height="400"></canvas>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-layer">
+                <button class="btn-control" onclick="moveLeft()">←</button>
+                <div class="center-controls">
+                    <button class="btn-control btn-rotate" onclick="rotate()">↻</button>
+                    <button class="btn-control" onclick="moveDown()">↓</button>
+                </div>
+                <button class="btn-control" onclick="moveRight()">→</button>
+            </div>
+            <div class="actions-layer">
+                <button class="btn-action" onclick="onClickStore()">🛒 SHOP</button>
+                <button class="btn-action" onclick="force10Rotates()"
+                    style="margin-top: 10px; background: #eab308; color: #fff;">10회 자동 회전</button>
+            </div>
+        </main>
+
+        <!-- Store Modal -->
+        <div id="store-modal" class="modal-overlay">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>🛒 Item Shop</h2>
+                    <button class="btn-x" onclick="closeStore()">✖</button>
+                </div>
+                <div class="modal-body">
+                    <div class="shop-item">
+                        <div class="item-icon">💣</div>
+                        <div class="item-details">
+                            <strong>Line Clear Bomb</strong>
+                            <p class="price product-info">5,000 Score</p>
+                        </div>
+                        <button class="btn-buy" onclick="onBuyProduct('bomb', 5000)">Buy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Push Popup -->
+        <div id="promo-popup" class="modal-overlay">
+            <div class="modal-card popup-bounce">
+                <button class="btn-x-float" onclick="closePromo()">✖</button>
+                <div class="popup-badge">HOT DEAL 🔥</div>
+                <h2>Special Package!</h2>
+                <p id="promo-copy">Clear lines easily! 50% OFF!</p>
+                <button class="btn-cta" onclick="applyPromo()">Check it out</button>
+            </div>
+        </div>
+
+        <!-- In-App Message Overlay -->
+        <div id="engage-overlay" class="modal-overlay">
+            <div class="modal-card popup-bounce">
+                <button class="btn-x-float" onclick="closeEngage()">✖</button>
+                <h2 id="engage-title">Event Triggered!</h2>
+                <p id="engage-body">You found a hidden event.</p>
+                <button class="btn-cta" onclick="closeEngage()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js?v=test16"></script>
+</body>
+
+</html>
