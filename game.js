@@ -316,19 +316,33 @@ function logServerWebhook(payload) {
   }
 
   const time = new Date().toLocaleTimeString();
-  let rawStr = '';
-  if (typeof payload === 'object') {
-    // Basic formatting for readability
-    rawStr = JSON.stringify(payload, null, 2);
-  } else {
-    rawStr = String(payload);
-  }
+
+  // Extract key fields from TE webhook format
+  let title = 'N/A';
+  let body = 'N/A';
+  let cta = 'N/A';
+  let discount = 'N/A';
+
+  try {
+    const firstObj = Array.isArray(payload) ? payload[0] : payload;
+    const params = firstObj.params || {};
+    title = params.title || 'N/A';
+    body = params.body || params.content || 'N/A';
+    cta = params.cta || params.button_text || 'N/A';
+    discount = params.discount_rate || 'N/A';
+  } catch (e) { }
 
   const div = document.createElement('div');
   div.className = 'server-log-item';
+  div.style.borderLeft = '4px solid #3b82f6';
   div.innerHTML = `
-    <div class="server-log-time">⏱️ ${time} | Webhook Received</div>
-    <div class="server-log-raw">${rawStr}</div>
+    <div class="server-log-time" style="color:#60a5fa; font-weight:bold;">🔔 [${time}] 웹훅 도착!</div>
+    <div style="margin-top: 5px; color: #e2e8f0;">
+      <div style="margin-bottom: 4px;"><span style="color:#94a3b8; width: 45px; display: inline-block;">제목:</span> <strong style="color: #fff;">${title}</strong></div>
+      <div style="margin-bottom: 4px;"><span style="color:#94a3b8; width: 45px; display: inline-block;">본문:</span> <span style="color: #cbd5e1;">${body}</span></div>
+      <div style="margin-bottom: 4px;"><span style="color:#94a3b8; width: 45px; display: inline-block;">버튼:</span> <span style="color: #fbbf24;">[${cta}]</span></div>
+      <div><span style="color:#94a3b8; width: 45px; display: inline-block;">할인율:</span> <span style="color: #fca5a5;">${discount}</span></div>
+    </div>
   `;
   container.prepend(div);
 }
