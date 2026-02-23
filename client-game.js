@@ -1,40 +1,54 @@
-/* Zelda-style Mini Engine for TE SDK Multi-Instance A/B Testing */
+/* High-Quality Zelda Engine for TE SDK Multi-Instance A/B Testing */
 
-const TILE_SIZE = 32;
-const MAP_COLS = 20;
-const MAP_ROWS = 10;
+const TILE_SIZE = 48; // Scaled up for higher res feel
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 450; // Widescreen ratio
+
+// Preload High-Quality Assets
+const ASSETS = {
+    bg: new Image(),
+    heroA: new Image(), // User A Link
+    heroB: new Image(), // User B Link
+    chestClosed: new Image(),
+    chestOpen: new Image()
+};
+
+// Using high-res placeholder image URLs representing the requested BotW/TotK style
+ASSETS.bg.src = 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=1000&auto=format&fit=crop'; // Lush green forest/grassland background
+ASSETS.heroA.src = 'https://cdn-icons-png.flaticon.com/512/3052/3052203.png'; // High-res Blue Knight/Hero icon
+ASSETS.heroB.src = 'https://cdn-icons-png.flaticon.com/512/3052/3052192.png'; // High-res Green Knight/Hero icon
+ASSETS.chestClosed.src = 'https://cdn-icons-png.flaticon.com/512/5109/5109670.png'; // High-res closed wooden chest
+ASSETS.chestOpen.src = 'https://cdn-icons-png.flaticon.com/512/5109/5109647.png'; // High-res open glowing chest
 
 class GameInstance {
-    constructor(canvasId, logId, taInstance, controlScheme, colorTheme) {
+    constructor(canvasId, logId, taInstance, controlScheme, heroImage) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         this.logContainer = document.getElementById(logId);
         this.ta = taInstance;
-        this.colorTheme = colorTheme; // { hero: '#...', chest: '#...' }
+        this.heroImage = heroImage;
+
+        // Internal Resolution (High-res 16:9)
+        this.canvas.width = CANVAS_WIDTH;
+        this.canvas.height = CANVAS_HEIGHT;
+
+        // Visual display scaling handled by CSS
+        this.canvas.style.width = '100%';
+        this.canvas.style.height = '100%';
+        this.canvas.style.objectFit = 'cover';
 
         // Define controls
         this.keys = { up: false, down: false, left: false, right: false, action: false };
-        this.controlScheme = controlScheme; // { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', action: 'KeyE' }
-
-        // Setup Canvas Resolution
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
+        this.controlScheme = controlScheme;
 
         // Game State
-        this.hero = { x: 2, y: 3, w: 24, h: 24, speed: 4 };
-        this.chest = { x: 15, y: 5, w: TILE_SIZE, h: TILE_SIZE, isOpen: false };
-
+        this.hero = { x: 100, y: 200, w: 64, h: 64, speed: 6 };
+        this.chest = { x: 500, y: 150, w: 80, h: 80, isOpen: false };
         this.lastActionTime = 0;
 
         // Start Loop
         this.loop = this.loop.bind(this);
         requestAnimationFrame(this.loop);
-    }
-
-    resize() {
-        const rect = this.canvas.parentElement.getBoundingClientRect();
-        this.canvas.width = rect.width * 0.9;
-        this.canvas.height = rect.height * 0.7;
     }
 
     handleKeyDown(code) {
@@ -63,7 +77,7 @@ class GameInstance {
         if (this.keys.left) this.hero.x -= this.hero.speed;
         if (this.keys.right) this.hero.x += this.hero.speed;
 
-        // Boundaries
+        // Boundaries matching internal resolution
         this.hero.x = Math.max(0, Math.min(this.canvas.width - this.hero.w, this.hero.x));
         this.hero.y = Math.max(0, Math.min(this.canvas.height - this.hero.h, this.hero.y));
     }
@@ -73,24 +87,32 @@ class GameInstance {
         if (now - this.lastActionTime < 500) return; // debounce
         this.lastActionTime = now;
 
-        // AABB Collision with Chest
+        // AABB Collision with Chest (expanded hitbox for easier interaction)
         const hit = (
-            this.hero.x < this.chest.x + this.chest.w &&
-            this.hero.x + this.hero.w > this.chest.x &&
-            this.hero.y < this.chest.y + this.chest.h &&
-            this.hero.y + this.hero.h > this.chest.y
+            this.hero.x < this.chest.x + this.chest.w + 20 &&
+            this.hero.x + this.hero.w > this.chest.x - 20 &&
+            this.hero.y < this.chest.y + this.chest.h + 20 &&
+            this.hero.y + this.hero.h > this.chest.y - 20
         );
 
         if (hit) {
             this.chest.isOpen = !this.chest.isOpen;
             if (this.chest.isOpen) {
-                this.logEvent('trigger_event', { interaction: 'open_chest', map: 'forest' });
-                this.logSystem('📦 상자를 열었습니다! (trigger_event 전송)');
+                // UNIFIED EVENT NAME: Both instances fire exactly 'trigger_event' (or 'open_chest')
+                // This ensures TE dashboard needs only 1 campaign config.
+                const unifiedEventName = 'trigger_event';
+
+                let nickname = this.ta && this.ta.name === 'userA' ? 'Link_A' : 'Zelda_B';
+
+                this.logEvent(unifiedEventName, {
+                    interaction: 'open_chest',
+                    map_zone: 'hyrule_field',
+                    hero_nickname: nickname
+                });
+                this.logSystem(`📦 여의주 상자를 열었습니다! (${unifiedEventName} 서버 발송)`);
             } else {
                 this.logSystem('📦 상자를 닫았습니다.');
             }
-        } else {
-            this.logSystem('🗡️ 허공에 칼질 중...');
         }
     }
 
@@ -98,99 +120,92 @@ class GameInstance {
         // Clear
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // 1. Draw Retro Grass Background
-        this.ctx.fillStyle = '#86efac'; // Base grass color
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // 1. Draw High-Res Zelda Background (Image)
+        if (ASSETS.bg.complete) {
+            // Fill cover preserving aspect ratio manually
+            this.ctx.drawImage(ASSETS.bg, 0, 0, this.canvas.width, this.canvas.height);
+            // Draw a slight dark overlay to make sprites pop
+            this.ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            // Fallback while loading
+            this.ctx.fillStyle = '#4ade80';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
 
-        // Add grass texture details
-        this.ctx.fillStyle = '#4ade80';
-        for (let i = 0; i < this.canvas.width; i += TILE_SIZE) {
-            for (let j = 0; j < this.canvas.height; j += TILE_SIZE) {
-                if ((i + j) % 64 === 0) {
-                    this.ctx.fillRect(i + 4, j + 4, 4, 8);
-                    this.ctx.fillRect(i + 8, j + 8, 4, 4);
+        // 2. Draw Realistic Chest
+        const chestImg = this.chest.isOpen ? ASSETS.chestOpen : ASSETS.chestClosed;
+
+        // Draw shadow under chest
+        this.ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(this.chest.x + this.chest.w / 2, this.chest.y + this.chest.h - 10, this.chest.w / 2, 10, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        if (chestImg.complete) {
+            // Add hover glow if close but not open
+            if (!this.chest.isOpen) {
+                const hit = (
+                    this.hero.x < this.chest.x + this.chest.w + 20 && this.hero.x + this.hero.w > this.chest.x - 20 &&
+                    this.hero.y < this.chest.y + this.chest.h + 20 && this.hero.y + this.hero.h > this.chest.y - 20
+                );
+                if (hit) {
+                    this.ctx.shadowColor = '#fcd34d';
+                    this.ctx.shadowBlur = 20;
                 }
+            }
+
+            this.ctx.drawImage(chestImg, this.chest.x, this.chest.y, this.chest.w, this.chest.h);
+            this.ctx.shadowBlur = 0; // reset
+        } else {
+            // Fallback rect
+            this.ctx.fillStyle = this.chest.isOpen ? '#fcd34d' : '#854d0e';
+            this.ctx.fillRect(this.chest.x, this.chest.y, this.chest.w, this.chest.h);
+        }
+
+        // Action Hint Text
+        if (!this.chest.isOpen) {
+            const hit = (
+                this.hero.x < this.chest.x + this.chest.w + 20 && this.hero.x + this.hero.w > this.chest.x - 20 &&
+                this.hero.y < this.chest.y + this.chest.h + 20 && this.hero.y + this.hero.h > this.chest.y - 20
+            );
+            if (hit) {
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = 'bold 16px Outfit, sans-serif';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(this.ta.name === 'userA' ? 'Press E to Open' : 'Press SPACE to Open', this.chest.x + this.chest.w / 2, this.chest.y - 15);
+                this.ctx.textAlign = 'left';
             }
         }
 
-        // 2. Draw Chest (Zelda Retro Style)
-        const cx = this.chest.x;
-        const cy = this.chest.y;
-        const cw = this.chest.w;
-        const ch = this.chest.h;
+        // 3. Draw Hero (Detailed Image Sprite)
+        // Draw hero shadow
+        this.ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(this.hero.x + this.hero.w / 2, this.hero.y + this.hero.h - 5, this.hero.w / 3, 8, 0, 0, Math.PI * 2);
+        this.ctx.fill();
 
-        if (this.chest.isOpen) {
-            // Open Chest
-            this.ctx.fillStyle = '#d97706'; // Dark wood inside
-            this.ctx.fillRect(cx, cy, cw, ch);
-            this.ctx.fillStyle = '#f59e0b'; // Light wood body
-            this.ctx.fillRect(cx, cy + ch / 2, cw, ch / 2);
-            this.ctx.fillStyle = '#fef3c7'; // Glowing item inside
-            this.ctx.fillRect(cx + cw / 4, cy + ch / 4, cw / 2, cw / 2);
+        if (this.heroImage && this.heroImage.complete) {
+            // Bobbing animation when moving
+            let walkOffset = 0;
+            if (this.keys.up || this.keys.down || this.keys.left || this.keys.right) {
+                walkOffset = Math.sin(Date.now() / 100) * 4;
+            }
 
-            this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            this.ctx.font = 'bold 10px monospace';
-            this.ctx.fillText('OPEN', cx, cy - 5);
+            // Flip horizontally if moving left
+            if (this.keys.left) {
+                this.ctx.save();
+                this.ctx.translate(this.hero.x + this.hero.w, this.hero.y + walkOffset);
+                this.ctx.scale(-1, 1);
+                this.ctx.drawImage(this.heroImage, 0, 0, this.hero.w, this.hero.h);
+                this.ctx.restore();
+            } else {
+                this.ctx.drawImage(this.heroImage, this.hero.x, this.hero.y + walkOffset, this.hero.w, this.hero.h);
+            }
         } else {
-            // Closed Chest
-            this.ctx.fillStyle = '#b45309'; // Main wood body
-            this.ctx.fillRect(cx, cy, cw, ch);
-            this.ctx.fillStyle = '#92400e'; // Lid shadow
-            this.ctx.fillRect(cx, cy, cw, ch / 2);
-            this.ctx.fillStyle = '#fcd34d'; // Gold lock
-            this.ctx.fillRect(cx + cw / 2 - 4, cy + ch / 2 - 4, 8, 8);
-
-            this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
-            this.ctx.font = 'bold 10px monospace';
-            this.ctx.fillText('CHEST', cx, cy - 5);
-        }
-
-        // 3. Draw Hero (Retro Link Style)
-        const hx = this.hero.x;
-        const hy = this.hero.y;
-
-        // Shadow
-        this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(hx + 12, hy + 22, 10, 4, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // Tunic (Body)
-        this.ctx.fillStyle = this.colorTheme.hero;
-        this.ctx.fillRect(hx + 4, hy + 10, 16, 12);
-
-        // Belt
-        this.ctx.fillStyle = '#78350f';
-        this.ctx.fillRect(hx + 4, hy + 16, 16, 4);
-        this.ctx.fillStyle = '#fde047'; // Belt buckle
-        this.ctx.fillRect(hx + 10, hy + 16, 4, 4);
-
-        // Head/Face
-        this.ctx.fillStyle = '#fcd34d'; // Skin tone
-        this.ctx.fillRect(hx + 4, hy + 4, 16, 10);
-
-        // Hat (Retro pointed hood overlapping)
-        this.ctx.fillStyle = this.colorTheme.hero;
-        this.ctx.beginPath();
-        this.ctx.moveTo(hx + 0, hy + 8);
-        this.ctx.lineTo(hx + 12, hy - 4);
-        this.ctx.lineTo(hx + 24, hy + 8);
-        this.ctx.fill();
-
-        // Eyes (facing forward or looking down)
-        this.ctx.fillStyle = '#1e293b';
-        if (this.keys.down || (!this.keys.up && !this.keys.left && !this.keys.right)) {
-            // Facing down
-            this.ctx.fillRect(hx + 8, hy + 8, 2, 2);
-            this.ctx.fillRect(hx + 14, hy + 8, 2, 2);
-        } else if (this.keys.left) {
-            this.ctx.fillRect(hx + 4, hy + 8, 2, 2);
-        } else if (this.keys.right) {
-            this.ctx.fillRect(hx + 18, hy + 8, 2, 2);
-        } else if (this.keys.up) {
-            // Back of head, no eyes
-            this.ctx.fillStyle = this.colorTheme.hero;
-            this.ctx.fillRect(hx + 4, hy + 4, 16, 10);
+            // Fallback rect
+            this.ctx.fillStyle = 'blue';
+            this.ctx.fillRect(this.hero.x, this.hero.y, this.hero.w, this.hero.h);
         }
     }
 
@@ -232,17 +247,17 @@ window.addEventListener('load', () => {
         gameA = new GameInstance(
             'canvasA', 'logsA', taA,
             { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', action: 'KeyE' },
-            { hero: '#2563eb' } // TE Blue
+            ASSETS.heroA
         );
 
         gameB = new GameInstance(
             'canvasB', 'logsB', taB,
             { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', action: 'Space' },
-            { hero: '#059669' } // TE Green
+            ASSETS.heroB
         );
 
-        gameA.logSystem('게임 A 엔진 준비 완료 - W/A/S/D 키 조작');
-        gameB.logSystem('게임 B 엔진 준비 완료 - 방향키 조작');
+        gameA.logSystem('Zelda Engine A Load Complete - W/A/S/D');
+        gameB.logSystem('Zelda Engine B Load Complete - Arrows');
     }, 500);
 });
 
@@ -265,15 +280,16 @@ window.addEventListener('keyup', (e) => {
 // TE SDK In-App Message (Trigger) Listeners
 // ==========================================
 
-// User A Callback
+// Both users listen for the exact same popup payload targeting their specific instance
+
 window.onTriggerMessageA = function (result) {
     if (!result || !result.length) return;
     const msg = result[0];
     const params = msg.custom_params || {};
 
-    document.getElementById('popupA-title').innerText = msg.title || params.title || '캠페인 도착';
-    document.getElementById('popupA-body').innerText = msg.content || params.body || '내용 없음';
-    document.getElementById('popupA-btn').innerText = msg.button_text || params.cta || '확인';
+    document.getElementById('popupA-title').innerText = msg.title || params.title || 'Master Sword Discovered!';
+    document.getElementById('popupA-body').innerText = msg.content || params.body || 'You have unlocked a legendary item.';
+    document.getElementById('popupA-btn').innerText = msg.button_text || params.cta || 'Claim';
 
     const popup = document.getElementById('popupA');
     popup.style.display = 'flex';
@@ -281,18 +297,17 @@ window.onTriggerMessageA = function (result) {
     void popup.offsetWidth;
     popup.classList.add('popup-bounce');
 
-    if (gameA) gameA.logSystem('🎉 캠페인 A 팝업이 트래킹 되었습니다!', '#3b82f6');
+    if (gameA) gameA.logSystem('🎉 A/B Pop-up (User A) Received via In-App Message', '#3b82f6');
 };
 
-// User B Callback
 window.onTriggerMessageB = function (result) {
     if (!result || !result.length) return;
     const msg = result[0];
     const params = msg.custom_params || {};
 
-    document.getElementById('popupB-title').innerText = msg.title || params.title || '캠페인 도착';
-    document.getElementById('popupB-body').innerText = msg.content || params.body || '내용 없음';
-    document.getElementById('popupB-btn').innerText = msg.button_text || params.cta || '확인';
+    document.getElementById('popupB-title').innerText = msg.title || params.title || 'Hylian Shield Discovered!';
+    document.getElementById('popupB-body').innerText = msg.content || params.body || 'You have unlocked a legendary item.';
+    document.getElementById('popupB-btn').innerText = msg.button_text || params.cta || 'Claim';
 
     const popup = document.getElementById('popupB');
     popup.style.display = 'flex';
@@ -300,5 +315,5 @@ window.onTriggerMessageB = function (result) {
     void popup.offsetWidth;
     popup.classList.add('popup-bounce');
 
-    if (gameB) gameB.logSystem('🎉 캠페인 B 팝업이 트래킹 되었습니다!', '#10b981');
+    if (gameB) gameB.logSystem('🎉 A/B Pop-up (User B) Received via In-App Message', '#10b981');
 };
