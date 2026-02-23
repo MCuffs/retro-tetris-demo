@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zelda Split-Screen A/B Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Thinking Analytics SDK -->
+    <script src="./tdremoteconfig.umd.min.js"></script>
+    <script src="./tdstrategy.umd.min.js"></script>
+    <script>
+        window.__pendingTriggerMessagesA = [];
+        window.__pendingTriggerMessagesB = [];
+
+        try {
+            if (!window.TDApp || typeof window.TDApp.init !== 'function') {
+                throw new Error('TDApp SDK not found');
+            }
+
+            // ============================================
+            // Instance A (User A) - Top Screen
+            // ============================================
+            window.TDApp.init({
+                appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
+                serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
+                name: 'userA', // Multi-instance identifier
+                enableLog: true,
+                debugMode: 'debug',
+                send_method: 'ajax',
+                autoTrack: { pageShow: true, pageHide: true },
+                templates: [{ templateCode: 'td_strategy', mode: 'none' }],
+                triggerListener: function (result) {
+                    if (window.onTriggerMessageA) {
+                        window.onTriggerMessageA(result);
+                    } else {
+                        window.__pendingTriggerMessagesA.push(result);
+                    }
+                }
+            });
+            window.taA = window.thinkingdata.userA;
+            if (window.taA && typeof window.taA.login === 'function') {
+                window.taA.login('user_a_tester');
+                window.taA.quick('autoTrack');
+            }
+
+            // ============================================
+            // Instance B (User B) - Bottom Screen
+            // ============================================
+            window.TDApp.init({
+                appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
+                serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
+                name: 'userB', // Multi-instance identifier
+                enableLog: true,
+                debugMode: 'debug',
+                send_method: 'ajax',
+                autoTrack: { pageShow: true, pageHide: true },
+                templates: [{ templateCode: 'td_strategy', mode: 'none' }],
+                triggerListener: function (result) {
+                    if (window.onTriggerMessageB) {
+                        window.onTriggerMessageB(result);
+                    } else {
+                        window.__pendingTriggerMessagesB.push(result);
+                    }
+                }
+            });
+            window.taB = window.thinkingdata.userB;
+            if (window.taB && typeof window.taB.login === 'function') {
+                window.taB.login('user_b_tester');
+                window.taB.quick('autoTrack');
+            }
+
+            console.log('TDApp Multi-Instances (User A, User B) Initialized');
+        } catch (e) {
+            console.error('SDK Init Failed:', e);
+        }
+    </script>
+
+    <link rel="stylesheet" href="client-style.css">
+</head>
+
+<body>
+    <!-- Dashboard Top Navigation -->
+    <div class="top-nav">
+        <a href="index.html" class="btn-back">← Portal</a>
+        <div class="nav-title">Client A/B Test (Split-Screen)</div>
+    </div>
+
+    <div class="dashboard-container">
+
+        <!-- ==============================
+             USER A (Top Screen) - TE Blue Theme
+             Keyboard: W/A/S/D
+        =============================== -->
+        <div class="player-view player-a">
+            <div class="hud">
+                <span class="user-badge badge-a">USER A (user_a_tester)</span>
+                <span class="controls-hint">W/A/S/D to move &middot; E to interact</span>
+            </div>
+
+            <canvas id="canvasA" class="game-canvas"></canvas>
+
+            <div id="logsA" class="event-logs"></div>
+
+            <!-- In-App Message Overlay A -->
+            <div id="popupA" class="modal-overlay">
+                <div class="modal-card popup-bounce" style="border-top: 4px solid var(--color-a);">
+                    <button class="btn-x-float"
+                        onclick="document.getElementById('popupA').style.display='none'">✖</button>
+                    <div class="popup-badge bg-blue">TE 캠페인 A 수신!</div>
+                    <h2 id="popupA-title">제목</h2>
+                    <p id="popupA-body">본문</p>
+                    <button class="btn-cta btn-cta-blue" id="popupA-btn">확인</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==============================
+             USER B (Bottom Screen) - TE Green Theme
+             Keyboard: Arrows
+        =============================== -->
+        <div class="player-view player-b">
+            <div class="hud">
+                <span class="user-badge badge-b">USER B (user_b_tester)</span>
+                <span class="controls-hint">Arrows to move &middot; SPACE to interact</span>
+            </div>
+
+            <canvas id="canvasB" class="game-canvas"></canvas>
+
+            <div id="logsB" class="event-logs"></div>
+
+            <!-- In-App Message Overlay B -->
+            <div id="popupB" class="modal-overlay">
+                <div class="modal-card popup-bounce" style="border-top: 4px solid var(--color-b);">
+                    <button class="btn-x-float"
+                        onclick="document.getElementById('popupB').style.display='none'">✖</button>
+                    <div class="popup-badge bg-green">TE 캠페인 B 수신!</div>
+                    <h2 id="popupB-title">제목</h2>
+                    <p id="popupB-body">본문</p>
+                    <button class="btn-cta btn-cta-green" id="popupB-btn">확인</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="client-game.js?v=test1"></script>
+</body>
+
+</html>

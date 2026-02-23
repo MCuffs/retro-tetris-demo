@@ -1,256 +1,244 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TE SDK Demo Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&family=Outfit:wght@400;600;800&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #10b981;
-            --card-bg: rgba(30, 41, 59, 0.7);
+            --bg-color: #f7f9fc;
+            --surface-color: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent-primary: #2563eb;
+            /* TE Blue */
+            --accent-hover: #1d4ed8;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-sizing;
         }
 
         body {
             margin: 0;
             padding: 0;
             background-color: var(--bg-color);
-            background-image:
-                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.15), transparent 25%);
             color: var(--text-main);
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Pretendard', 'Outfit', sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow-x: hidden;
         }
 
-        .portal-container {
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
-            z-index: 10;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #60a5fa, #34d399);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-            letter-spacing: -1px;
-        }
-
-        p.subtitle {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            margin-bottom: 50px;
-            line-height: 1.6;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 20px;
-        }
-
-        .mode-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            padding: 40px 30px;
-            text-decoration: none;
-            color: var(--text-main);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            backdrop-filter: blur(12px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .mode-card::before {
-            content: '';
-            position: absolute;
+        /* Top Navigation Bar */
+        .top-nav {
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: var(--accent-primary);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            height: 60px;
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-logo-icon {
+            color: var(--accent-primary);
+            font-size: 1.4rem;
+        }
+
+        /* Main Container */
+        .portal-container {
+            max-width: 900px;
+            width: 90%;
+            margin-top: 60px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        /* Card Styles */
+        .mode-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
         .mode-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: var(--accent-primary);
         }
 
-        .mode-card:hover::before {
-            opacity: 1;
-        }
-
-        .mode-card.webhook::before {
-            background: var(--accent-primary);
-        }
-
-        .mode-card.client::before {
-            background: var(--accent-secondary);
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
         }
 
         .card-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+            width: 48px;
+            height: 48px;
+            background: #eff6ff;
+            color: var(--accent-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .card-badge {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .mode-card:hover .card-badge {
+            background: #eff6ff;
+            color: var(--accent-primary);
         }
 
         .card-title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 15px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
 
         .card-desc {
             color: var(--text-muted);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             line-height: 1.5;
+            flex-grow: 1;
         }
 
-        .card-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
+        .card-action {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            color: var(--accent-primary);
+            font-size: 0.9rem;
             font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            gap: 4px;
         }
 
-        .badge-webhook {
-            color: #93c5fd;
+        .card-action::after {
+            content: '→';
+            transition: transform 0.2s;
         }
 
-        .badge-client {
-            color: #6ee7b7;
-            background: rgba(16, 185, 129, 0.15);
-        }
-
-        /* Animated background particles */
-        .particles {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
-            animation: float 20s infinite linear;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) scale(0);
-                opacity: 0;
-            }
-
-            20% {
-                opacity: 1;
-            }
-
-            80% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-100px) scale(2);
-                opacity: 0;
-            }
+        .mode-card:hover .card-action::after {
+            transform: translateX(4px);
         }
 
         @media (max-width: 600px) {
             h1 {
-                font-size: 2.2rem;
+                font-size: 1.8rem;
             }
 
-            .mode-card {
-                padding: 30px 20px;
+            .portal-container {
+                margin-top: 80px;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="particles" id="particles"></div>
-
-    <div class="portal-container">
-        <h1>TE SDK Demo Portal</h1>
-        <p class="subtitle">Select a demonstration mode to explore ThinkingData's real-time engagement and
-            personalization scenarios.</p>
-
-        <div class="cards-grid">
-            <!-- Webhook Mode -->
-            <a href="webhook-test.html" class="mode-card webhook">
-                <div class="card-badge badge-webhook">Push Method</div>
-                <div class="card-icon">🧩</div>
-                <div class="card-title">Retro Tetris</div>
-                <div class="card-desc">
-                    Test <strong>Webhook</strong> delivery.<br>
-                    A single-player Tetris game connected via Ngrok tunneling to demonstrate real-time server-side push
-                    payloads.
-                </div>
-            </a>
-
-            <!-- Client A/B Test Mode -->
-            <a href="client-test.html" class="mode-card client">
-                <div class="card-badge badge-client">Pull Method</div>
-                <div class="card-icon">⚔️</div>
-                <div class="card-title">Zelda Split-Screen</div>
-                <div class="card-desc">
-                    Test <strong>In-App Messaging & A/B Tests</strong>.<br>
-                    A 2-player split-screen RPG demo running multi-instance SDKs to show independent native client
-                    interactions.
-                </div>
-            </a>
+    <div class="top-nav">
+        <div class="nav-logo">
+            <span class="nav-logo-icon">▤</span> ThinkingData Demo
         </div>
     </div>
 
-    <script>
-        // Simple background particles effect
-        const particlesContainer = document.getElementById('particles');
-        for(let i=0; i<30; i++) {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + 'vw';
-            p.style.width = p.style.height = (Math.random() * 20 + 5) + 'px';
-            p.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            p.style.animationDelay = (Math.random() * 10) + 's';
-            particlesContainer.appendChild(p);
-        }
-    </script>
+    <div class="portal-container">
+        <div class="header-section">
+            <h1>TE Engagement Test Portal</h1>
+            <p class="subtitle">개인화 마케팅 캠페인 시연을 위한 라이브 데모 환경입니다.</p>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Webhook Mode -->
+            <a href="webhook-test.html" class="mode-card">
+                <div class="card-header">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-badge">Server Push</div>
+                </div>
+                <div class="card-title">Webhook Test</div>
+                <div class="card-desc">
+                    로컬 서버(Ngrok)를 통한 실시간 Webhook 수신 테스트. 이벤트 달성 시 즉각적인 서버 PUSH 페이로드를 확인할 수 있습니다.
+                </div>
+                <div class="card-action">Enter Workspace</div>
+            </a>
+
+            <!-- Client A/B Test Mode -->
+            <a href="client-test.html" class="mode-card">
+                <div class="card-header">
+                    <div class="card-icon">👥</div>
+                    <div class="card-badge">Client SDK / A/B Test</div>
+                </div>
+                <div class="card-title">In-App Message (Multi-Instance)</div>
+                <div class="card-desc">
+                    1기기 2유저(A/B) 스플릿 모드. 서로 다른 유저 식별자를 가진 멀티 인스턴스로 각각의 인앱 메시지 및 A/B 테스트 푸시를 증명합니다.
+                </div>
+                <div class="card-action">Enter Workspace</div>
+            </a>
+        </div>
+    </div>
 </body>
 
 </html>

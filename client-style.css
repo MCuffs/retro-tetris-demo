@@ -1,0 +1,294 @@
+:root {
+    --bg-main: #f5f7f9;
+    --surface: #ffffff;
+    --border-light: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --color-a: #2563eb;
+    /* Top Screen Primary Blue */
+    --color-a-light: #eff6ff;
+    --color-b: #059669;
+    /* Bottom Screen Primary Green */
+    --color-b-light: #ecfdf5;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Pretendard', 'Outfit', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    overflow: hidden;
+}
+
+/* Dashboard Top Navigation */
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 100;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.nav-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.btn-back {
+    margin-right: 15px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s;
+}
+
+.btn-back:hover {
+    color: var(--color-a);
+}
+
+/* Split Container (Dashboard Layout) */
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    padding-top: 50px;
+    /* offset for nav */
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+.player-view {
+    flex: 1;
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.hud {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-badge {
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+}
+
+.badge-a {
+    background: var(--color-a-light);
+    color: var(--color-a);
+    border-color: rgba(37, 99, 235, 0.2);
+}
+
+.badge-b {
+    background: var(--color-b-light);
+    color: var(--color-b);
+    border-color: rgba(5, 150, 105, 0.2);
+}
+
+.controls-hint {
+    background: #f8fafc;
+    border: 1px solid var(--border-light);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.game-canvas {
+    background: #f1f5f9;
+    /* Light gray "grid" bg */
+    image-rendering: pixelated;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+/* Event Logs (Mini versions) */
+.event-logs {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    height: 70px;
+    background: #f8fafc;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    z-index: 10;
+}
+
+.log-entry {
+    margin: 2px 0;
+    color: var(--text-main);
+}
+
+.log-system {
+    color: var(--color-a);
+    font-weight: 600;
+}
+
+/* In-App Message Modal Shared Styles */
+.modal-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-card {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 320px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    border: 1px solid var(--border-light);
+}
+
+.btn-x-float {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #f1f5f9;
+    border: none;
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.btn-x-float:hover {
+    background: #e2e8f0;
+    color: var(--text-main);
+}
+
+.popup-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.bg-blue {
+    background: var(--color-a-light);
+    color: var(--color-a);
+}
+
+.bg-green {
+    background: var(--color-b-light);
+    color: var(--color-b);
+}
+
+.modal-card h2 {
+    font-size: 1.25rem;
+    margin: 0 0 12px 0;
+    color: var(--text-main);
+    font-weight: 800;
+}
+
+.modal-card p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.btn-cta {
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+    width: 100%;
+    transition: transform 0.1s, box-shadow 0.2s;
+}
+
+.btn-cta-blue {
+    background: var(--color-a);
+    color: white;
+}
+
+.btn-cta-blue:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-cta-green {
+    background: var(--color-b);
+    color: white;
+}
+
+.btn-cta-green:hover {
+    background: #047857;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    transform: translateY(-1px);
+}
+
+.popup-bounce {
+    animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
