@@ -302,7 +302,7 @@ async function pollWebhookBridge() {
   } catch (err) { }
 }
 
-function startWebhookBridgePolling() { setInterval(pollWebhookBridge, 2000); }
+function startWebhookBridgePolling() { setInterval(pollWebhookBridge, 500); }
 
 function logSystem(message, color) {
   const logContainer = document.getElementById('event-logs');
