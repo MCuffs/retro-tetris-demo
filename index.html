@@ -1,145 +1,256 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThinkingData Story - Tetris Mode</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Dongle:wght@300;400;700&display=swap"
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TE SDK Demo Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&display=swap"
         rel="stylesheet">
-
-    <!-- Thinking Analytics SDK BEGIN -->
-    <script src="./thinkingdata.umd.min.js"></script>
-    <script src="./tdcore.umd.min.js"></script>
-    <script src="./tdremoteconfig.umd.min.js"></script>
-    <script src="./tdstrategy.umd.min.js"></script>
-    <script>
-        window.__pendingTriggerMessages = [];
-        try {
-            if (!window.TDApp || typeof window.TDApp.init !== 'function') {
-                throw new Error('TDApp SDK not found');
-            }
-            window.TDApp.init({
-                appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
-                serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
-                enableLog: true,
-                debugMode: 'debug',
-                send_method: 'ajax',
-                autoTrack: { pageShow: true, pageHide: true },
-                templates: [{ templateCode: 'td_strategy', mode: 'none' }],
-                triggerListener: function (result) {
-                    if (window.onTriggerMessage) {
-                        window.onTriggerMessage(result);
-                    } else {
-                        window.__pendingTriggerMessages.push(result);
-                    }
-                }
-            });
-            window.ta = window.tdanalytics2024 || window.thinkingdata;
-            if (window.ta && typeof window.ta.login === 'function') {
-                const testUserId = 'demo_tester_' + Math.floor(Math.random() * 100000);
-                window.ta.login(testUserId);
-            }
-            if (window.ta && typeof window.ta.quick === 'function') {
-                window.ta.quick('autoTrack');
-            }
-            console.log('TDApp Initialized');
-        } catch (e) {
-            console.error('SDK Init Failed:', e);
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #10b981;
+            --card-bg: rgba(30, 41, 59, 0.7);
         }
-        window.addEventListener('load', function () {
-            if (window.onSDKLoad) window.onSDKLoad();
-        });
-    </script>
-    <!-- Thinking Analytics SDK END -->
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.15), transparent 25%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .portal-container {
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            letter-spacing: -1px;
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 50px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .mode-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .mode-card:hover::before {
+            opacity: 1;
+        }
+
+        .mode-card.webhook::before {
+            background: var(--accent-primary);
+        }
+
+        .mode-card.client::before {
+            background: var(--accent-secondary);
+        }
+
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .badge-webhook {
+            color: #93c5fd;
+        }
+
+        .badge-client {
+            color: #6ee7b7;
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) scale(2);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .mode-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="app-stage">
-        <!-- Webhook Server Logs Panel -->
-        <div id="server-logs-panel" class="server-logs-panel">
-            <div class="panel-header">
-                📡 Webhook Server Logs
-                <div class="pulse-indicator"></div>
-            </div>
-            <div id="server-logs-content" class="panel-content">
-                <div style="color: #64748b; text-align: center; margin-top: 50px;">Waiting for webhook...</div>
-            </div>
-        </div>
+    <div class="particles" id="particles"></div>
 
-        <!-- Game World -->
-        <main class="game-world" id="game-screen">
-            <div class="top-hud">
-                <div class="score-badge">SCORE: <span id="score">0</span></div>
-                <div class="score-badge">LINES: <span id="lines">0</span></div>
-            </div>
+    <div class="portal-container">
+        <h1>TE SDK Demo Portal</h1>
+        <p class="subtitle">Select a demonstration mode to explore ThinkingData's real-time engagement and
+            personalization scenarios.</p>
 
-            <div class="tetris-container">
-                <canvas id="tetris" width="240" height="400"></canvas>
-            </div>
-
-            <!-- Controls -->
-            <div class="controls-layer">
-                <button class="btn-control" onclick="moveLeft()">←</button>
-                <div class="center-controls">
-                    <button class="btn-control btn-rotate" onclick="rotate()">↻</button>
-                    <button class="btn-control" onclick="moveDown()">↓</button>
+        <div class="cards-grid">
+            <!-- Webhook Mode -->
+            <a href="webhook-test.html" class="mode-card webhook">
+                <div class="card-badge badge-webhook">Push Method</div>
+                <div class="card-icon">🧩</div>
+                <div class="card-title">Retro Tetris</div>
+                <div class="card-desc">
+                    Test <strong>Webhook</strong> delivery.<br>
+                    A single-player Tetris game connected via Ngrok tunneling to demonstrate real-time server-side push
+                    payloads.
                 </div>
-                <button class="btn-control" onclick="moveRight()">→</button>
-            </div>
-            <div class="actions-layer">
-                <button class="btn-action" onclick="onClickStore()">🛒 SHOP</button>
-                <button class="btn-action" onclick="force10Rotates()"
-                    style="margin-top: 10px; background: #eab308; color: #fff;">10회 자동 회전</button>
-                <button class="btn-action" onclick="sendTriggerEvent()"
-                    style="margin-top: 10px; background: #3b82f6; color: #fff;">1회 트리거 발송</button>
-            </div>
-        </main>
+            </a>
 
-        <!-- Store Modal -->
-        <div id="store-modal" class="modal-overlay">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2>🛒 Item Shop</h2>
-                    <button class="btn-x" onclick="closeStore()">✖</button>
+            <!-- Client A/B Test Mode -->
+            <a href="client-test.html" class="mode-card client">
+                <div class="card-badge badge-client">Pull Method</div>
+                <div class="card-icon">⚔️</div>
+                <div class="card-title">Zelda Split-Screen</div>
+                <div class="card-desc">
+                    Test <strong>In-App Messaging & A/B Tests</strong>.<br>
+                    A 2-player split-screen RPG demo running multi-instance SDKs to show independent native client
+                    interactions.
                 </div>
-                <div class="modal-body">
-                    <div class="shop-item">
-                        <div class="item-icon">💣</div>
-                        <div class="item-details">
-                            <strong>Line Clear Bomb</strong>
-                            <p class="price product-info">5,000 Score</p>
-                        </div>
-                        <button class="btn-buy" onclick="onBuyProduct('bomb', 5000)">Buy</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payment Push Popup -->
-        <div id="promo-popup" class="modal-overlay">
-            <div class="modal-card popup-bounce">
-                <button class="btn-x-float" onclick="closePromo()">✖</button>
-                <div class="popup-badge">HOT DEAL 🔥</div>
-                <h2>Special Package!</h2>
-                <p id="promo-copy">Clear lines easily! 50% OFF!</p>
-                <button class="btn-cta" onclick="applyPromo()">Check it out</button>
-            </div>
-        </div>
-
-        <!-- In-App Message Overlay -->
-        <div id="engage-overlay" class="modal-overlay">
-            <div class="modal-card popup-bounce">
-                <button class="btn-x-float" onclick="closeEngage()">✖</button>
-                <h2 id="engage-title">Event Triggered!</h2>
-                <p id="engage-body">You found a hidden event.</p>
-                <button class="btn-cta" onclick="closeEngage()">Confirm</button>
-            </div>
+            </a>
         </div>
     </div>
 
-    <script src="game.js?v=test22"></script>
+    <script>
+        // Simple background particles effect
+        const particlesContainer = document.getElementById('particles');
+        for(let i=0; i<30; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.width = p.style.height = (Math.random() * 20 + 5) + 'px';
+            p.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            p.style.animationDelay = (Math.random() * 10) + 's';
+            particlesContainer.appendChild(p);
+        }
+    </script>
 </body>
 
 </html>
