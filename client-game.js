@@ -98,24 +98,100 @@ class GameInstance {
         // Clear
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw Chest
-        this.ctx.fillStyle = this.chest.isOpen ? '#fcd34d' : '#854d0e'; // open: gold, closed: brown
-        this.ctx.fillRect(this.chest.x, this.chest.y, this.chest.w, this.chest.h);
+        // 1. Draw Retro Grass Background
+        this.ctx.fillStyle = '#86efac'; // Base grass color
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Chest label
-        this.ctx.fillStyle = '#1e293b';
-        this.ctx.font = '10px monospace';
-        this.ctx.fillText(this.chest.isOpen ? 'OPEN' : 'CHEST', this.chest.x, this.chest.y - 5);
+        // Add grass texture details
+        this.ctx.fillStyle = '#4ade80';
+        for (let i = 0; i < this.canvas.width; i += TILE_SIZE) {
+            for (let j = 0; j < this.canvas.height; j += TILE_SIZE) {
+                if ((i + j) % 64 === 0) {
+                    this.ctx.fillRect(i + 4, j + 4, 4, 8);
+                    this.ctx.fillRect(i + 8, j + 8, 4, 4);
+                }
+            }
+        }
 
-        // Draw Hero
+        // 2. Draw Chest (Zelda Retro Style)
+        const cx = this.chest.x;
+        const cy = this.chest.y;
+        const cw = this.chest.w;
+        const ch = this.chest.h;
+
+        if (this.chest.isOpen) {
+            // Open Chest
+            this.ctx.fillStyle = '#d97706'; // Dark wood inside
+            this.ctx.fillRect(cx, cy, cw, ch);
+            this.ctx.fillStyle = '#f59e0b'; // Light wood body
+            this.ctx.fillRect(cx, cy + ch / 2, cw, ch / 2);
+            this.ctx.fillStyle = '#fef3c7'; // Glowing item inside
+            this.ctx.fillRect(cx + cw / 4, cy + ch / 4, cw / 2, cw / 2);
+
+            this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            this.ctx.font = 'bold 10px monospace';
+            this.ctx.fillText('OPEN', cx, cy - 5);
+        } else {
+            // Closed Chest
+            this.ctx.fillStyle = '#b45309'; // Main wood body
+            this.ctx.fillRect(cx, cy, cw, ch);
+            this.ctx.fillStyle = '#92400e'; // Lid shadow
+            this.ctx.fillRect(cx, cy, cw, ch / 2);
+            this.ctx.fillStyle = '#fcd34d'; // Gold lock
+            this.ctx.fillRect(cx + cw / 2 - 4, cy + ch / 2 - 4, 8, 8);
+
+            this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
+            this.ctx.font = 'bold 10px monospace';
+            this.ctx.fillText('CHEST', cx, cy - 5);
+        }
+
+        // 3. Draw Hero (Retro Link Style)
+        const hx = this.hero.x;
+        const hy = this.hero.y;
+
+        // Shadow
+        this.ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(hx + 12, hy + 22, 10, 4, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Tunic (Body)
         this.ctx.fillStyle = this.colorTheme.hero;
-        this.ctx.fillRect(this.hero.x, this.hero.y, this.hero.w, this.hero.h);
-        // Hero face direction (simplified)
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.globalAlpha = 0.8;
-        this.ctx.fillRect(this.hero.x + 4, this.hero.y + 4, 6, 6);
-        this.ctx.fillRect(this.hero.x + 14, this.hero.y + 4, 6, 6);
-        this.ctx.globalAlpha = 1.0;
+        this.ctx.fillRect(hx + 4, hy + 10, 16, 12);
+
+        // Belt
+        this.ctx.fillStyle = '#78350f';
+        this.ctx.fillRect(hx + 4, hy + 16, 16, 4);
+        this.ctx.fillStyle = '#fde047'; // Belt buckle
+        this.ctx.fillRect(hx + 10, hy + 16, 4, 4);
+
+        // Head/Face
+        this.ctx.fillStyle = '#fcd34d'; // Skin tone
+        this.ctx.fillRect(hx + 4, hy + 4, 16, 10);
+
+        // Hat (Retro pointed hood overlapping)
+        this.ctx.fillStyle = this.colorTheme.hero;
+        this.ctx.beginPath();
+        this.ctx.moveTo(hx + 0, hy + 8);
+        this.ctx.lineTo(hx + 12, hy - 4);
+        this.ctx.lineTo(hx + 24, hy + 8);
+        this.ctx.fill();
+
+        // Eyes (facing forward or looking down)
+        this.ctx.fillStyle = '#1e293b';
+        if (this.keys.down || (!this.keys.up && !this.keys.left && !this.keys.right)) {
+            // Facing down
+            this.ctx.fillRect(hx + 8, hy + 8, 2, 2);
+            this.ctx.fillRect(hx + 14, hy + 8, 2, 2);
+        } else if (this.keys.left) {
+            this.ctx.fillRect(hx + 4, hy + 8, 2, 2);
+        } else if (this.keys.right) {
+            this.ctx.fillRect(hx + 18, hy + 8, 2, 2);
+        } else if (this.keys.up) {
+            // Back of head, no eyes
+            this.ctx.fillStyle = this.colorTheme.hero;
+            this.ctx.fillRect(hx + 4, hy + 4, 16, 10);
+        }
     }
 
     loop() {

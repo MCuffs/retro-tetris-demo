@@ -43,6 +43,7 @@
             window.taA = window.thinkingdata.userA;
             if (window.taA && typeof window.taA.login === 'function') {
                 window.taA.login('user_a_tester');
+                window.taA.userSet({ nickname: 'Link_A' }); // Add Nickname Property
                 window.taA.quick('autoTrack');
             }
 
@@ -69,10 +70,11 @@
             window.taB = window.thinkingdata.userB;
             if (window.taB && typeof window.taB.login === 'function') {
                 window.taB.login('user_b_tester');
+                window.taB.userSet({ nickname: 'Zelda_B' }); // Add Nickname Property
                 window.taB.quick('autoTrack');
             }
 
-            console.log('TDApp Multi-Instances (User A, User B) Initialized');
+            console.log('TDApp Multi-Instances Initialized with Nicknames');
         } catch (e) {
             console.error('SDK Init Failed:', e);
         }
@@ -96,7 +98,7 @@
         =============================== -->
         <div class="player-view player-a">
             <div class="hud">
-                <span class="user-badge badge-a">USER A (user_a_tester)</span>
+                <span class="user-badge badge-a">USER A (Link_A)</span>
                 <span class="controls-hint">W/A/S/D to move &middot; E to interact</span>
             </div>
 
@@ -123,7 +125,7 @@
         =============================== -->
         <div class="player-view player-b">
             <div class="hud">
-                <span class="user-badge badge-b">USER B (user_b_tester)</span>
+                <span class="user-badge badge-b">USER B (Zelda_B)</span>
                 <span class="controls-hint">Arrows to move &middot; SPACE to interact</span>
             </div>
 

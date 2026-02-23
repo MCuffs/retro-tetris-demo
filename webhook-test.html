@@ -5,9 +5,475 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThinkingData Story - Tetris Mode</title>
-    <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Jua&family=Dongle:wght@300;400;700&display=swap"
         rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f5f7f9;
+            --surface: #ffffff;
+            --border-light: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent-primary: #2563eb;
+            --color-a-light: #eff6ff;
+            --tetris-bg: #f8fafc;
+            --tetris-grid: #e2e8f0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Pretendard', 'Outfit', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        .nav-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pulse-indicator {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .btn-back {
+            margin-right: 15px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .btn-back:hover {
+            color: var(--accent-primary);
+        }
+
+        /* App Stage (Centered Game Area) */
+        .app-stage {
+            background-color: var(--surface);
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 900px;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-light);
+            padding-top: 50px;
+            /* Offset for nav */
+            overflow: hidden;
+        }
+
+        /* Server Logs Panel (Left side floating) */
+        .server-logs-panel {
+            position: absolute;
+            left: 20px;
+            top: 70px;
+            bottom: 20px;
+            width: 320px;
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+
+        .panel-header {
+            background: #f8fafc;
+            padding: 12px 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f1f5f9;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Single Webhook Log Card */
+        .server-log-item {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .server-log-time {
+            color: var(--accent-primary);
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+
+        .log-field {
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .log-label {
+            color: var(--text-muted);
+            width: 50px;
+            display: inline-block;
+            font-size: 0.8rem;
+        }
+
+        .log-value {
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .log-value.highlight {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .server-logs-panel {
+                display: none;
+            }
+        }
+
+        /* Tetris Header Base */
+        .game-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .score-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+        }
+
+        .game-status-badge {
+            background: var(--color-a-light);
+            color: var(--accent-primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+        }
+
+        /* Main Game Area */
+        .game-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-main);
+            padding: 20px;
+        }
+
+        #tetris-canvas {
+            background-color: var(--tetris-bg);
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            image-rendering: pixelated;
+            /* keep sharp lines */
+        }
+
+        /* Bottom Controls Container */
+        .game-controls {
+            padding: 20px;
+            background: var(--surface);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* D-Pad Buttons */
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        .ctrl-btn {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            font-weight: 800;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .ctrl-btn:active,
+        .ctrl-btn.active {
+            background: #e2e8f0;
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .btn-up {
+            grid-column: 2;
+            border-color: #cbd5e1;
+        }
+
+        .btn-left {
+            grid-column: 1;
+            border-color: #cbd5e1;
+        }
+
+        .btn-down {
+            grid-column: 2;
+            border-color: #cbd5e1;
+        }
+
+        .btn-right {
+            grid-column: 3;
+            border-color: #cbd5e1;
+        }
+
+        /* Admin / Tools */
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .trigger-btn {
+            background: white;
+            color: var(--text-main);
+            border: 1px solid var(--border-light);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .trigger-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        /* Event Logs (Console) */
+        .event-logs {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.75rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            height: 60px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+            /* latest at bottom visually */
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            color: var(--text-main);
+        }
+
+        .log-webhook {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        /* Webhook Popup Alert Style */
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .promo-card {
+            background: var(--surface);
+            border-radius: 16px;
+            width: 320px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border-light);
+            border-top: 4px solid #f59e0b;
+            /* Attention line */
+        }
+
+        .promo-card.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .btn-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #f1f5f9;
+            border: none;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .btn-close:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .promo-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #d97706;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .promo-card h2 {
+            font-size: 1.25rem;
+            margin: 0 0 12px 0;
+            color: var(--text-main);
+            font-weight: 800;
+        }
+
+        .promo-card p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .btn-buy {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        .btn-buy:hover {
+            background: #d97706;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            transform: translateY(-1px);
+        }
+    </style>
 
     <!-- Thinking Analytics SDK BEGIN -->
     <script src="./thinkingdata.umd.min.js"></script>
@@ -56,87 +522,56 @@
 </head>
 
 <body>
+    <div class="top-nav">
+        <a href="index.html" class="btn-back">← Portal</a>
+        <div class="nav-title">Webhook Delivery Test (Tetris)</div>
+    </div>
+
+    <!-- Server Logs Panel (Left side floating UI) -->
+    <div class="server-logs-panel">
+        <div class="panel-header">
+            📡 Webhook Server Logs
+            <div class="pulse-indicator"></div>
+        </div>
+        <div id="server-logs-content" class="panel-content">
+            <div style="color: #64748b; text-align: center; margin-top: 50px;">Waiting for webhook...</div>
+        </div>
+    </div>
+
+    <!-- App Stage (Centered Game Area) -->
     <div class="app-stage">
-        <!-- Webhook Server Logs Panel -->
-        <div id="server-logs-panel" class="server-logs-panel">
-            <div class="panel-header">
-                📡 Webhook Server Logs
-                <div class="pulse-indicator"></div>
+        <div class="shop-item">
+            <div class="item-icon">💣</div>
+            <div class="item-details">
+                <strong>Line Clear Bomb</strong>
+                <p class="price product-info">5,000 Score</p>
             </div>
-            <div id="server-logs-content" class="panel-content">
-                <div style="color: #64748b; text-align: center; margin-top: 50px;">Waiting for webhook...</div>
-            </div>
+            <button class="btn-buy" onclick="onBuyProduct('bomb', 5000)">Buy</button>
         </div>
+    </div>
+    </div>
+    </div>
 
-        <!-- Game World -->
-        <main class="game-world" id="game-screen">
-            <div class="top-hud">
-                <div class="score-badge">SCORE: <span id="score">0</span></div>
-                <div class="score-badge">LINES: <span id="lines">0</span></div>
-            </div>
-
-            <div class="tetris-container">
-                <canvas id="tetris" width="240" height="400"></canvas>
-            </div>
-
-            <!-- Controls -->
-            <div class="controls-layer">
-                <button class="btn-control" onclick="moveLeft()">←</button>
-                <div class="center-controls">
-                    <button class="btn-control btn-rotate" onclick="rotate()">↻</button>
-                    <button class="btn-control" onclick="moveDown()">↓</button>
-                </div>
-                <button class="btn-control" onclick="moveRight()">→</button>
-            </div>
-            <div class="actions-layer">
-                <button class="btn-action" onclick="onClickStore()">🛒 SHOP</button>
-                <button class="btn-action" onclick="force10Rotates()"
-                    style="margin-top: 10px; background: #eab308; color: #fff;">10회 자동 회전</button>
-                <button class="btn-action" onclick="sendTriggerEvent()"
-                    style="margin-top: 10px; background: #3b82f6; color: #fff;">1회 트리거 발송</button>
-            </div>
-        </main>
-
-        <!-- Store Modal -->
-        <div id="store-modal" class="modal-overlay">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2>🛒 Item Shop</h2>
-                    <button class="btn-x" onclick="closeStore()">✖</button>
-                </div>
-                <div class="modal-body">
-                    <div class="shop-item">
-                        <div class="item-icon">💣</div>
-                        <div class="item-details">
-                            <strong>Line Clear Bomb</strong>
-                            <p class="price product-info">5,000 Score</p>
-                        </div>
-                        <button class="btn-buy" onclick="onBuyProduct('bomb', 5000)">Buy</button>
-                    </div>
-                </div>
-            </div>
+    <!-- Payment Push Popup -->
+    <div id="promo-popup" class="modal-overlay">
+        <div class="modal-card popup-bounce">
+            <button class="btn-x-float" onclick="closePromo()">✖</button>
+            <div class="popup-badge">HOT DEAL 🔥</div>
+            <h2>Special Package!</h2>
+            <p id="promo-copy">Clear lines easily! 50% OFF!</p>
+            <button class="btn-cta" onclick="applyPromo()">Check it out</button>
         </div>
+    </div>
 
-        <!-- Payment Push Popup -->
-        <div id="promo-popup" class="modal-overlay">
-            <div class="modal-card popup-bounce">
-                <button class="btn-x-float" onclick="closePromo()">✖</button>
-                <div class="popup-badge">HOT DEAL 🔥</div>
-                <h2>Special Package!</h2>
-                <p id="promo-copy">Clear lines easily! 50% OFF!</p>
-                <button class="btn-cta" onclick="applyPromo()">Check it out</button>
-            </div>
+    <!-- In-App Message Overlay -->
+    <div id="engage-overlay" class="modal-overlay">
+        <div class="modal-card popup-bounce">
+            <button class="btn-x-float" onclick="closeEngage()">✖</button>
+            <h2 id="engage-title">Event Triggered!</h2>
+            <p id="engage-body">You found a hidden event.</p>
+            <button class="btn-cta" onclick="closeEngage()">Confirm</button>
         </div>
-
-        <!-- In-App Message Overlay -->
-        <div id="engage-overlay" class="modal-overlay">
-            <div class="modal-card popup-bounce">
-                <button class="btn-x-float" onclick="closeEngage()">✖</button>
-                <h2 id="engage-title">Event Triggered!</h2>
-                <p id="engage-body">You found a hidden event.</p>
-                <button class="btn-cta" onclick="closeEngage()">Confirm</button>
-            </div>
-        </div>
+    </div>
     </div>
 
     <script src="game.js?v=test22"></script>
