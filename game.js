@@ -1,5 +1,5 @@
 // --- Webhook & System Variables ---
-const DEFAULT_WEBHOOK_URL = 'https://izayah-coronalled-maturely.ngrok-free.dev';
+const DEFAULT_WEBHOOK_URL = 'https://enabling-terrapin-highly.ngrok.dev';
 const WEBHOOK_STORAGE_KEY = 'te_demo_webhook_url';
 
 let currentConfig = {
