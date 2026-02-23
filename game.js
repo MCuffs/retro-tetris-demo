@@ -298,8 +298,39 @@ async function pollWebhookBridge() {
 
     // Remove the bridgeArmedAt check that swallows valid payloads
     bridgeLastTs = Number(data.ts || Date.now());
+
+    if (typeof logServerWebhook === 'function') {
+      logServerWebhook(data.raw || data);
+    }
+
     applyClientChannelMessage({ title: data.title, body: data.body, cta: data.cta, discount_rate: data.discount_rate });
   } catch (err) { }
+}
+
+function logServerWebhook(payload) {
+  const container = document.getElementById('server-logs-content');
+  if (!container) return;
+
+  if (container.innerHTML.includes('Waiting for webhook...')) {
+    container.innerHTML = '';
+  }
+
+  const time = new Date().toLocaleTimeString();
+  let rawStr = '';
+  if (typeof payload === 'object') {
+    // Basic formatting for readability
+    rawStr = JSON.stringify(payload, null, 2);
+  } else {
+    rawStr = String(payload);
+  }
+
+  const div = document.createElement('div');
+  div.className = 'server-log-item';
+  div.innerHTML = `
+    <div class="server-log-time">⏱️ ${time} | Webhook Received</div>
+    <div class="server-log-raw">${rawStr}</div>
+  `;
+  container.prepend(div);
 }
 
 function startWebhookBridgePolling() { setInterval(pollWebhookBridge, 500); }

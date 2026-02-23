@@ -244,6 +244,100 @@ canvas {
   right: 10px;
 }
 
+/* Server Logs Panel (Left Side Overlay) */
+.server-logs-panel {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  bottom: 20px;
+  width: 340px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  color: #e2e8f0;
+}
+
+.server-logs-panel .panel-header {
+  padding: 12px 15px;
+  background: #1e293b;
+  font-weight: bold;
+  border-bottom: 1px solid #334155;
+  font-size: 0.9rem;
+  color: #38bdf8;
+  display: flex;
+  justify-content: space-between;
+}
+
+.server-logs-panel .pulse-indicator {
+  width: 10px;
+  height: 10px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.server-logs-panel .panel-content {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.server-log-item {
+  background: #1e293b;
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 3px solid #10b981;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.server-log-time {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 4px;
+}
+
+.server-log-raw {
+  color: #a7f3d0;
+}
+
+@media (max-width: 1000px) {
+  .server-logs-panel {
+    display: none;
+    /* Hide on small screens where it overlaps game */
+  }
+}
+
 .shop-item {
   display: flex;
   align-items: center;
