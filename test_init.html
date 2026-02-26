@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="./thinkingdata.umd.min.js"></script>
+    <script src="./tdcore.umd.min.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            let log = {
+                'window.thinkingdata': typeof window.thinkingdata,
+                'window.TDApp': typeof window.TDApp,
+            };
+
+            try {
+                let inst1 = window.thinkingdata.init({ appId: 'test1', serverUrl: 'test', name: 'useA' });
+                log['inst1_returns'] = typeof inst1;
+                if (inst1) log['inst1.track'] = typeof inst1.track;
+            } catch (e) { log['inst1 error'] = e.message; }
+
+            // Is there a .getInstance?
+            log['thinkingdata.getInstance'] = typeof window.thinkingdata.getInstance;
+
+            // Is it attached to thinkingdata?
+            log['thinkingdata.useA'] = typeof window.thinkingdata.useA;
+
+            document.getElementById('log').innerText = JSON.stringify(log);
+        });
+    </script>
+</head>
+
+<body>
+    <div id="log"></div>
+</body>
+
+</html>

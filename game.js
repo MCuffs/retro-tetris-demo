@@ -1,5 +1,5 @@
 // --- Webhook & System Variables ---
-const DEFAULT_WEBHOOK_URL = 'https://izayah-coronalled-maturely.ngrok-free.dev';
+const DEFAULT_WEBHOOK_URL = 'http://127.0.0.1:8788';
 const WEBHOOK_STORAGE_KEY = 'te_demo_webhook_url';
 
 let currentConfig = {
@@ -384,7 +384,8 @@ window.onSDKLoad = function () {
   if (window.ta && typeof window.ta.getDistinctId === 'function') {
     logSystem(`🆔 <strong>Device Distinct ID:</strong> ${window.ta.getDistinctId()}`, '#a5b4fc');
   }
-  if (getWebhookUrl() !== DEFAULT_WEBHOOK_URL) {
+  const storedUrl = getWebhookUrl();
+  if (!storedUrl || !storedUrl.startsWith('http')) {
     setWebhookUrl(DEFAULT_WEBHOOK_URL);
     logSystem(`🧭 <strong>Webhook URL Auto-Fix:</strong> ${DEFAULT_WEBHOOK_URL}`, '#38bdf8');
   }

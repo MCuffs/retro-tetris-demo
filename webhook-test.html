@@ -473,6 +473,163 @@
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
             transform: translateY(-1px);
         }
+
+        /* Modal shared styles */
+        .modal-overlay .modal-card {
+            background: var(--surface);
+            border-radius: 16px;
+            width: 320px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            border: 1px solid var(--border-light);
+        }
+
+        .modal-overlay .modal-card h2 {
+            font-size: 1.25rem;
+            margin: 0 0 12px 0;
+            color: var(--text-main);
+            font-weight: 800;
+        }
+
+        .modal-overlay .modal-card p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .btn-x-float {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #f1f5f9;
+            border: none;
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-x-float:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .btn-cta {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        .btn-cta:hover {
+            background: #d97706;
+        }
+
+        .popup-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #d97706;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .popup-bounce {
+            animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Modal header for store */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 10px;
+        }
+
+        .modal-header h2 { margin: 0; }
+
+        .btn-x {
+            background: #f1f5f9;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .shop-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .item-icon { font-size: 24px; }
+        .item-details { flex: 1; text-align: left; }
+        .price { color: var(--accent-primary); font-weight: bold; margin: 0; }
+
+        /* Webhook URL Input */
+        .config-section {
+            padding: 0 20px 10px;
+            background: var(--surface);
+        }
+
+        .config-section label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 5px;
+            margin-top: 4px;
+        }
+
+        .input-row input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
     </style>
 
     <!-- Thinking Analytics SDK BEGIN -->
@@ -502,10 +659,9 @@
                     }
                 }
             });
-            window.ta = window.tdanalytics2024 || window.thinkingdata;
+            window.ta = window.thinkingdata;
             if (window.ta && typeof window.ta.login === 'function') {
-                const testUserId = 'demo_tester_' + Math.floor(Math.random() * 100000);
-                window.ta.login(testUserId);
+                window.ta.login('demo_tester_webhook');
             }
             if (window.ta && typeof window.ta.quick === 'function') {
                 window.ta.quick('autoTrack');
@@ -524,7 +680,10 @@
 <body>
     <div class="top-nav">
         <a href="index.html" class="btn-back">← Portal</a>
-        <div class="nav-title">Webhook Delivery Test (Tetris)</div>
+        <div class="nav-title">
+            Webhook Delivery Test (Tetris)
+            <div class="pulse-indicator"></div>
+        </div>
     </div>
 
     <!-- Server Logs Panel (Left side floating UI) -->
@@ -540,16 +699,75 @@
 
     <!-- App Stage (Centered Game Area) -->
     <div class="app-stage">
-        <div class="shop-item">
-            <div class="item-icon">💣</div>
-            <div class="item-details">
-                <strong>Line Clear Bomb</strong>
-                <p class="price product-info">5,000 Score</p>
+
+        <!-- Score Header -->
+        <div class="game-header">
+            <div class="score-box">
+                <div class="score-label">SCORE</div>
+                <div class="score-value" id="score">0</div>
             </div>
-            <button class="btn-buy" onclick="onBuyProduct('bomb', 5000)">Buy</button>
+            <div class="game-status-badge">TETRIS MODE</div>
+            <div class="score-box">
+                <div class="score-label">LINES</div>
+                <div class="score-value" id="lines">0</div>
+            </div>
         </div>
-    </div>
-    </div>
+
+        <!-- Tetris Canvas -->
+        <div class="game-container">
+            <canvas id="tetris" width="240" height="400"></canvas>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div class="game-controls">
+            <!-- D-Pad -->
+            <div class="dpad">
+                <div></div>
+                <button class="ctrl-btn btn-up" onclick="rotate()">↻</button>
+                <div></div>
+                <button class="ctrl-btn btn-left" onclick="moveLeft()">←</button>
+                <button class="ctrl-btn btn-down" onclick="moveDown()">↓</button>
+                <button class="ctrl-btn btn-right" onclick="moveRight()">→</button>
+            </div>
+
+            <!-- Admin Buttons -->
+            <div class="admin-controls">
+                <button class="trigger-btn" onclick="onClickStore()">🛒 SHOP</button>
+                <button class="trigger-btn" onclick="force10Rotates()">⚡ 10회 회전</button>
+                <button class="trigger-btn" onclick="sendTriggerEvent()">🎯 트리거 발송</button>
+            </div>
+
+            <!-- Event Logs -->
+            <div id="event-logs" class="event-logs"></div>
+
+            <!-- Webhook URL Config -->
+            <div class="config-section">
+                <label>Webhook URL</label>
+                <div class="input-row">
+                    <input type="text" id="input-webhook-url" placeholder="http://127.0.0.1:8788">
+                    <button class="btn-small" onclick="saveWebhookConfig()">Save</button>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /app-stage -->
+
+    <!-- Store Modal -->
+    <div id="store-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>🛒 Item Shop</h2>
+                <button class="btn-x" onclick="closeStore()">✖</button>
+            </div>
+            <div class="shop-item">
+                <div class="item-icon">💣</div>
+                <div class="item-details">
+                    <strong>Line Clear Bomb</strong>
+                    <p class="price product-info">5,000 Score</p>
+                </div>
+                <button class="btn-buy" onclick="onBuyProduct('bomb', 5000)">Buy</button>
+            </div>
+        </div>
     </div>
 
     <!-- Payment Push Popup -->
@@ -572,9 +790,8 @@
             <button class="btn-cta" onclick="closeEngage()">Confirm</button>
         </div>
     </div>
-    </div>
 
-    <script src="game.js?v=test22"></script>
+    <script src="game.js?v=test23"></script>
 </body>
 
 </html>

@@ -1,154 +1,260 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zelda Split-Screen A/B Test</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&display=swap"
-        rel="stylesheet">
+    <title>A/B Test - Tetris</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="client-style.css">
+    <style>
+        /* Tetris Specific Overrides for Split Screen */
+        .dashboard-container {
+            flex-direction: row;
+            /* Side by side */
+            padding-top: 60px;
+        }
 
-    <!-- Thinking Analytics SDK -->
-    <script src="./tdremoteconfig.umd.min.js"></script>
-    <script src="./tdstrategy.umd.min.js"></script>
+        @media (max-width: 800px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+        }
+
+        .player-view {
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 20px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 80%;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-label {
+            font-size: 0.70rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .score-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .text-a {
+            color: var(--color-a);
+        }
+
+        .text-b {
+            color: var(--color-b);
+        }
+
+        .game-canvas {
+            background-color: #f8fafc;
+            border: 2px solid var(--border-light);
+            border-radius: 4px;
+            /* Match aspect ratio of tetris (12 cols x 20 rows) */
+            width: 240px;
+            height: 400px;
+            image-rendering: pixelated;
+        }
+
+        .hud {
+            position: relative;
+            top: 0;
+            left: 0;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+        }
+
+        .event-logs {
+            height: 80px;
+            width: 80%;
+            position: relative;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin-top: 20px;
+        }
+    </style>
+
+    <!-- Thinking Analytics SDK BEGIN -->
+    <script src="./thinkingdata.umd.min.js"></script>
     <script>
-        window.__pendingTriggerMessagesA = [];
-        window.__pendingTriggerMessagesB = [];
+        // 1. Instance for User A (Virtual Device A)
+        window.thinkingdata.init({
+            appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
+            serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
+            name: 'ta_a',
+            persistenceName: 'ta_a_storage',
+            enableLog: true,
+            send_method: 'ajax',
+            autoTrack: { pageShow: true, pageHide: true }
+        });
+        window.ta_a = window.thinkingdata;
 
+        // Wipe globals so the next script load creates a fresh instance!
+        delete window.thinkingdata;
+        delete window.tdanalytics2024;
+    </script>
+
+    <script src="./thinkingdata.umd.min.js"></script>
+    <script>
+        // 2. Instance for User B (Virtual Device B)
+        window.thinkingdata.init({
+            appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
+            serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
+            name: 'ta_b',
+            persistenceName: 'ta_b_storage',
+            enableLog: true,
+            send_method: 'ajax',
+            autoTrack: { pageShow: true, pageHide: true }
+        });
+        window.ta_b = window.thinkingdata;
+    </script>
+
+    <script>
+        // Initialize Identities Separately
         try {
-            if (!window.TDApp || typeof window.TDApp.init !== 'function') {
-                throw new Error('TDApp SDK not found');
+            if (window.ta_a) {
+                window.ta_a.identify('identity_a_isolated');
+                window.ta_a.login('user_a_tester');
+                window.ta_a.userSet({ nickname: '유저A' });
+                window.ta_a.track('client_test_ready', {
+                    user_group: 'A',
+                    page: 'client-test',
+                    ts: new Date().toISOString()
+                });
+                window.ta_a.flush();
             }
 
-            // ============================================
-            // Instance A (User A) - Top Screen
-            // ============================================
-            window.TDApp.init({
-                appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
-                serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
-                name: 'userA', // Multi-instance identifier
-                enableLog: true,
-                debugMode: 'debug',
-                send_method: 'ajax',
-                autoTrack: { pageShow: true, pageHide: true },
-                templates: [{ templateCode: 'td_strategy', mode: 'none' }],
-                triggerListener: function (result) {
-                    if (window.onTriggerMessageA) {
-                        window.onTriggerMessageA(result);
-                    } else {
-                        window.__pendingTriggerMessagesA.push(result);
-                    }
-                }
-            });
-            window.taA = window.thinkingdata.userA;
-            if (window.taA && typeof window.taA.login === 'function') {
-                window.taA.login('user_a_tester');
-                window.taA.userSet({ nickname: 'Link_A' }); // Add Nickname Property
-                window.taA.quick('autoTrack');
+            if (window.ta_b) {
+                window.ta_b.identify('identity_b_isolated');
+                window.ta_b.login('user_b_tester');
+                window.ta_b.userSet({ nickname: '유저B' });
+                window.ta_b.track('client_test_ready', {
+                    user_group: 'B',
+                    page: 'client-test',
+                    ts: new Date().toISOString()
+                });
+                window.ta_b.flush();
             }
 
-            // ============================================
-            // Instance B (User B) - Bottom Screen
-            // ============================================
-            window.TDApp.init({
-                appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
-                serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
-                name: 'userB', // Multi-instance identifier
-                enableLog: true,
-                debugMode: 'debug',
-                send_method: 'ajax',
-                autoTrack: { pageShow: true, pageHide: true },
-                templates: [{ templateCode: 'td_strategy', mode: 'none' }],
-                triggerListener: function (result) {
-                    if (window.onTriggerMessageB) {
-                        window.onTriggerMessageB(result);
-                    } else {
-                        window.__pendingTriggerMessagesB.push(result);
-                    }
-                }
-            });
-            window.taB = window.thinkingdata.userB;
-            if (window.taB && typeof window.taB.login === 'function') {
-                window.taB.login('user_b_tester');
-                window.taB.userSet({ nickname: 'Zelda_B' }); // Add Nickname Property
-                window.taB.quick('autoTrack');
-            }
-
-            console.log('TDApp Multi-Instances Initialized with Nicknames');
+            console.log('TDApp Tracking Initialized via Multi-Instance Segregation');
         } catch (e) {
             console.error('SDK Init Failed:', e);
         }
     </script>
-
-    <link rel="stylesheet" href="client-style.css">
+    <!-- Thinking Analytics SDK END -->
 </head>
 
 <body>
-    <!-- Dashboard Top Navigation -->
     <div class="top-nav">
         <a href="index.html" class="btn-back">← Portal</a>
-        <div class="nav-title">Client A/B Test (Split-Screen)</div>
+        <div class="nav-title">Client A/B Test Demo (Dual Tetris)</div>
     </div>
 
     <div class="dashboard-container">
-
-        <!-- ==============================
-             USER A (Top Screen) - TE Blue Theme
-             Keyboard: W/A/S/D
-        =============================== -->
-        <div class="player-view player-a">
+        <!-- ========================================== -->
+        <!-- USER A: LEFT SCREEN (BLUE) -->
+        <!-- ========================================== -->
+        <div class="player-view" style="border-top: 4px solid var(--color-a); position: relative; overflow: hidden;">
             <div class="hud">
-                <span class="user-badge badge-a">USER A (Link_A)</span>
-                <span class="controls-hint">W/A/S/D to move &middot; E to interact</span>
+                <div class="user-badge badge-a">USER A </div>
+                <div class="controls-hint">W, A, S, D / Space</div>
             </div>
 
-            <canvas id="canvasA" class="game-canvas"></canvas>
+            <div class="game-header">
+                <div class="score-box">
+                    <div class="score-label">SCORE</div>
+                    <div class="score-value text-a" id="scoreA">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">LINES</div>
+                    <div class="score-value text-a" id="linesA">0</div>
+                </div>
+            </div>
 
+            <canvas id="canvasA" class="game-canvas" width="240" height="400"></canvas>
+
+            <!-- Logging UI for Target A -->
             <div id="logsA" class="event-logs"></div>
 
-            <!-- In-App Message Overlay A -->
-            <div id="popupA" class="modal-overlay">
+            <!-- USER A Popup -->
+            <div id="popupA" class="modal-overlay"
+                style="position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important;">
                 <div class="modal-card popup-bounce" style="border-top: 4px solid var(--color-a);">
-                    <button class="btn-x-float"
-                        onclick="document.getElementById('popupA').style.display='none'">✖</button>
-                    <div class="popup-badge bg-blue">TE 캠페인 A 수신!</div>
-                    <h2 id="popupA-title">제목</h2>
-                    <p id="popupA-body">본문</p>
-                    <button class="btn-cta btn-cta-blue" id="popupA-btn">확인</button>
+                    <button class="btn-x-float" onclick="closeWebhookPopup('popupA')">✖</button>
+                    <div class="popup-badge bg-blue" id="popupA-badge">A/B TEST - USER A</div>
+                    <h2 id="popupA-title">보상 지급!</h2>
+                    <p id="popupA-body">박스를 열어 보상을 획득했습니다.</p>
+                    <button class="btn-cta btn-cta-blue" id="popupA-btn"
+                        onclick="closeWebhookPopup('popupA')">확인</button>
                 </div>
             </div>
         </div>
 
-        <!-- ==============================
-             USER B (Bottom Screen) - TE Green Theme
-             Keyboard: Arrows
-        =============================== -->
-        <div class="player-view player-b">
+        <!-- ========================================== -->
+        <!-- USER B: RIGHT SCREEN (GREEN) -->
+        <!-- ========================================== -->
+        <div class="player-view" style="border-top: 4px solid var(--color-b); position: relative; overflow: hidden;">
             <div class="hud">
-                <span class="user-badge badge-b">USER B (Zelda_B)</span>
-                <span class="controls-hint">Arrows to move &middot; SPACE to interact</span>
+                <div class="user-badge badge-b">USER B</div>
+                <div class="controls-hint">Arrows / Enter</div>
             </div>
 
-            <canvas id="canvasB" class="game-canvas"></canvas>
+            <div class="game-header">
+                <div class="score-box">
+                    <div class="score-label">SCORE</div>
+                    <div class="score-value text-b" id="scoreB">0</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-label">LINES</div>
+                    <div class="score-value text-b" id="linesB">0</div>
+                </div>
+            </div>
 
+            <canvas id="canvasB" class="game-canvas" width="240" height="400"></canvas>
+
+            <!-- Logging UI for Target B -->
             <div id="logsB" class="event-logs"></div>
 
-            <!-- In-App Message Overlay B -->
-            <div id="popupB" class="modal-overlay">
+            <!-- USER B Popup -->
+            <div id="popupB" class="modal-overlay"
+                style="position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important;">
                 <div class="modal-card popup-bounce" style="border-top: 4px solid var(--color-b);">
-                    <button class="btn-x-float"
-                        onclick="document.getElementById('popupB').style.display='none'">✖</button>
-                    <div class="popup-badge bg-green">TE 캠페인 B 수신!</div>
-                    <h2 id="popupB-title">제목</h2>
-                    <p id="popupB-body">본문</p>
-                    <button class="btn-cta btn-cta-green" id="popupB-btn">확인</button>
+                    <button class="btn-x-float" onclick="closeWebhookPopup('popupB')">✖</button>
+                    <div class="popup-badge bg-green" id="popupB-badge">A/B TEST - USER B</div>
+                    <h2 id="popupB-title">보상 지급!</h2>
+                    <p id="popupB-body">박스를 열어 보상을 획득했습니다.</p>
+                    <button class="btn-cta btn-cta-green" id="popupB-btn"
+                        onclick="closeWebhookPopup('popupB')">확인</button>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <script src="client-game.js?v=test1"></script>
+
+
+    <!-- Dual Tetris Client Logic -->
+    <script src="client-game.js?v=dual_tetris"></script>
 </body>
 
 </html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <h1>SSE Connection Test</h1>
+    <div id="log"></div>
+    <script>
+        const logEl = document.getElementById('log');
+        function addLog(msg) {
+            logEl.innerHTML += `<div>${new Date().toISOString()}: ${msg}</div>`;
+            console.log(msg);
+        }
+
+        addLog("Connecting to SSE...");
+        const sse = new EventSource('http://localhost:8788/events');
+
+        sse.onopen = () => addLog("SSE Connection Opened!");
+
+        sse.onmessage = (e) => addLog("SSE Message received: " + e.data);
+
+        sse.onerror = (e) => {
+            addLog("SSE Error occurred. Check console for details.");
+            console.error("SSE Error:", e);
+        };
+    </script>
+</body>
+
+</html>

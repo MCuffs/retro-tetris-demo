@@ -1,319 +1,455 @@
-/* High-Quality Zelda Engine for TE SDK Multi-Instance A/B Testing */
+/* Dual Tetris for TE SDK A/B Testing */
 
-const TILE_SIZE = 48; // Scaled up for higher res feel
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 450; // Widescreen ratio
-
-// Preload High-Quality Assets
-const ASSETS = {
-    bg: new Image(),
-    heroA: new Image(), // User A Link
-    heroB: new Image(), // User B Link
-    chestClosed: new Image(),
-    chestOpen: new Image()
-};
-
-// Using high-res placeholder image URLs representing the requested BotW/TotK style
-ASSETS.bg.src = 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=1000&auto=format&fit=crop'; // Lush green forest/grassland background
-ASSETS.heroA.src = 'https://cdn-icons-png.flaticon.com/512/3052/3052203.png'; // High-res Blue Knight/Hero icon
-ASSETS.heroB.src = 'https://cdn-icons-png.flaticon.com/512/3052/3052192.png'; // High-res Green Knight/Hero icon
-ASSETS.chestClosed.src = 'https://cdn-icons-png.flaticon.com/512/5109/5109670.png'; // High-res closed wooden chest
-ASSETS.chestOpen.src = 'https://cdn-icons-png.flaticon.com/512/5109/5109647.png'; // High-res open glowing chest
-
-class GameInstance {
-    constructor(canvasId, logId, taInstance, controlScheme, heroImage) {
+class TetrisGame {
+    constructor(instanceId, accountId, nickname, canvasId, logsId, scoreId, linesId, sdkInstance) {
+        this.instanceId = instanceId;
+        this.accountId = accountId;
+        this.nickname = nickname;
         this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d');
-        this.logContainer = document.getElementById(logId);
-        this.ta = taInstance;
-        this.heroImage = heroImage;
+        this.context = this.canvas.getContext('2d');
+        this.logContainer = document.getElementById(logsId);
+        this.scoreEl = document.getElementById(scoreId);
+        this.linesEl = document.getElementById(linesId);
+        this.sdkInstance = sdkInstance;
 
-        // Internal Resolution (High-res 16:9)
-        this.canvas.width = CANVAS_WIDTH;
-        this.canvas.height = CANVAS_HEIGHT;
+        // Tetris engine configuration
+        this.context.scale(20, 20); // 240/12 = 20
 
-        // Visual display scaling handled by CSS
-        this.canvas.style.width = '100%';
-        this.canvas.style.height = '100%';
-        this.canvas.style.objectFit = 'cover';
+        // Use custom colors depending on User A (Blue) or User B (Green)
+        // Default Tetris Colors
+        this.colors = [
+            null,
+            '#FF0D72', // T
+            '#0DC2FF', // O
+            '#0DFF72', // L
+            '#F538FF', // J
+            '#FF8E0D', // I
+            '#FFE138', // S
+            '#3877FF'  // Z
+        ];
 
-        // Define controls
-        this.keys = { up: false, down: false, left: false, right: false, action: false };
-        this.controlScheme = controlScheme;
-
-        // Game State
-        this.hero = { x: 100, y: 200, w: 64, h: 64, speed: 6 };
-        this.chest = { x: 500, y: 150, w: 80, h: 80, isOpen: false };
-        this.lastActionTime = 0;
-
-        // Start Loop
-        this.loop = this.loop.bind(this);
-        requestAnimationFrame(this.loop);
-    }
-
-    handleKeyDown(code) {
-        if (code === this.controlScheme.up) this.keys.up = true;
-        if (code === this.controlScheme.down) this.keys.down = true;
-        if (code === this.controlScheme.left) this.keys.left = true;
-        if (code === this.controlScheme.right) this.keys.right = true;
-
-        if (code === this.controlScheme.action) {
-            this.keys.action = true;
-            this.tryInteract();
-        }
-    }
-
-    handleKeyUp(code) {
-        if (code === this.controlScheme.up) this.keys.up = false;
-        if (code === this.controlScheme.down) this.keys.down = false;
-        if (code === this.controlScheme.left) this.keys.left = false;
-        if (code === this.controlScheme.right) this.keys.right = false;
-        if (code === this.controlScheme.action) this.keys.action = false;
-    }
-
-    update() {
-        if (this.keys.up) this.hero.y -= this.hero.speed;
-        if (this.keys.down) this.hero.y += this.hero.speed;
-        if (this.keys.left) this.hero.x -= this.hero.speed;
-        if (this.keys.right) this.hero.x += this.hero.speed;
-
-        // Boundaries matching internal resolution
-        this.hero.x = Math.max(0, Math.min(this.canvas.width - this.hero.w, this.hero.x));
-        this.hero.y = Math.max(0, Math.min(this.canvas.height - this.hero.h, this.hero.y));
-    }
-
-    tryInteract() {
-        const now = Date.now();
-        if (now - this.lastActionTime < 500) return; // debounce
-        this.lastActionTime = now;
-
-        // AABB Collision with Chest (expanded hitbox for easier interaction)
-        const hit = (
-            this.hero.x < this.chest.x + this.chest.w + 20 &&
-            this.hero.x + this.hero.w > this.chest.x - 20 &&
-            this.hero.y < this.chest.y + this.chest.h + 20 &&
-            this.hero.y + this.hero.h > this.chest.y - 20
-        );
-
-        if (hit) {
-            this.chest.isOpen = !this.chest.isOpen;
-            if (this.chest.isOpen) {
-                // UNIFIED EVENT NAME: Both instances fire exactly 'trigger_event' (or 'open_chest')
-                // This ensures TE dashboard needs only 1 campaign config.
-                const unifiedEventName = 'trigger_event';
-
-                let nickname = this.ta && this.ta.name === 'userA' ? 'Link_A' : 'Zelda_B';
-
-                this.logEvent(unifiedEventName, {
-                    interaction: 'open_chest',
-                    map_zone: 'hyrule_field',
-                    hero_nickname: nickname
-                });
-                this.logSystem(`📦 여의주 상자를 열었습니다! (${unifiedEventName} 서버 발송)`);
-            } else {
-                this.logSystem('📦 상자를 닫았습니다.');
-            }
-        }
-    }
-
-    draw() {
-        // Clear
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // 1. Draw High-Res Zelda Background (Image)
-        if (ASSETS.bg.complete) {
-            // Fill cover preserving aspect ratio manually
-            this.ctx.drawImage(ASSETS.bg, 0, 0, this.canvas.width, this.canvas.height);
-            // Draw a slight dark overlay to make sprites pop
-            this.ctx.fillStyle = 'rgba(0,0,0,0.1)';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Specific color theme overrides for AB test distinction
+        if (this.instanceId === 'A') {
+            this.colors[2] = '#2563eb'; // blue O block
+            this.colors[5] = '#60a5fa'; // lighter blue I block
+            this.colors[7] = '#1e3a8a'; // darker blue Z block
         } else {
-            // Fallback while loading
-            this.ctx.fillStyle = '#4ade80';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.colors[2] = '#059669'; // green O block
+            this.colors[5] = '#34d399'; // lighter green I block
+            this.colors[7] = '#064e3b'; // darker green Z block
         }
 
-        // 2. Draw Realistic Chest
-        const chestImg = this.chest.isOpen ? ASSETS.chestOpen : ASSETS.chestClosed;
+        this.matrix = this.createMatrix(12, 20);
+        this.player = {
+            pos: { x: 0, y: 0 },
+            matrix: null,
+            score: 0,
+            linesCleared: 0,
+            totalLinesCleared: 0
+        };
 
-        // Draw shadow under chest
-        this.ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(this.chest.x + this.chest.w / 2, this.chest.y + this.chest.h - 10, this.chest.w / 2, 10, 0, 0, Math.PI * 2);
-        this.ctx.fill();
+        this.dropCounter = 0;
+        this.dropInterval = 1000;
+        this.lastTime = 0;
 
-        if (chestImg.complete) {
-            // Add hover glow if close but not open
-            if (!this.chest.isOpen) {
-                const hit = (
-                    this.hero.x < this.chest.x + this.chest.w + 20 && this.hero.x + this.hero.w > this.chest.x - 20 &&
-                    this.hero.y < this.chest.y + this.chest.h + 20 && this.hero.y + this.hero.h > this.chest.y - 20
-                );
-                if (hit) {
-                    this.ctx.shadowColor = '#fcd34d';
-                    this.ctx.shadowBlur = 20;
-                }
-            }
+        this.isActive = false;
 
-            this.ctx.drawImage(chestImg, this.chest.x, this.chest.y, this.chest.w, this.chest.h);
-            this.ctx.shadowBlur = 0; // reset
-        } else {
-            // Fallback rect
-            this.ctx.fillStyle = this.chest.isOpen ? '#fcd34d' : '#854d0e';
-            this.ctx.fillRect(this.chest.x, this.chest.y, this.chest.w, this.chest.h);
-        }
-
-        // Action Hint Text
-        if (!this.chest.isOpen) {
-            const hit = (
-                this.hero.x < this.chest.x + this.chest.w + 20 && this.hero.x + this.hero.w > this.chest.x - 20 &&
-                this.hero.y < this.chest.y + this.chest.h + 20 && this.hero.y + this.hero.h > this.chest.y - 20
-            );
-            if (hit) {
-                this.ctx.fillStyle = 'white';
-                this.ctx.font = 'bold 16px Outfit, sans-serif';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText(this.ta.name === 'userA' ? 'Press E to Open' : 'Press SPACE to Open', this.chest.x + this.chest.w / 2, this.chest.y - 15);
-                this.ctx.textAlign = 'left';
-            }
-        }
-
-        // 3. Draw Hero (Detailed Image Sprite)
-        // Draw hero shadow
-        this.ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(this.hero.x + this.hero.w / 2, this.hero.y + this.hero.h - 5, this.hero.w / 3, 8, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        if (this.heroImage && this.heroImage.complete) {
-            // Bobbing animation when moving
-            let walkOffset = 0;
-            if (this.keys.up || this.keys.down || this.keys.left || this.keys.right) {
-                walkOffset = Math.sin(Date.now() / 100) * 4;
-            }
-
-            // Flip horizontally if moving left
-            if (this.keys.left) {
-                this.ctx.save();
-                this.ctx.translate(this.hero.x + this.hero.w, this.hero.y + walkOffset);
-                this.ctx.scale(-1, 1);
-                this.ctx.drawImage(this.heroImage, 0, 0, this.hero.w, this.hero.h);
-                this.ctx.restore();
-            } else {
-                this.ctx.drawImage(this.heroImage, this.hero.x, this.hero.y + walkOffset, this.hero.w, this.hero.h);
-            }
-        } else {
-            // Fallback rect
-            this.ctx.fillStyle = 'blue';
-            this.ctx.fillRect(this.hero.x, this.hero.y, this.hero.w, this.hero.h);
-        }
+        this.playerReset();
+        this.updateScoreUI();
     }
 
-    loop() {
-        this.update();
-        this.draw();
-        requestAnimationFrame(this.loop);
-    }
-
-    logSystem(msg) {
-        const item = document.createElement('div');
-        item.className = 'log-entry log-system';
-        item.innerText = `[SYS] ${msg}`;
-        this.logContainer.prepend(item);
-    }
-
-    logEvent(eventName, props) {
+    /* --- Tracking --- */
+    trackEvent(eventName, props = {}, distinctIdOverride = null) {
         const time = new Date().toLocaleTimeString();
         const item = document.createElement('div');
         item.className = 'log-entry';
-        item.innerText = `[${time}] TE.track("${eventName}")`;
+        item.innerHTML = `[${time}] 🚀 <strong>ta.track</strong>('${eventName}', ${JSON.stringify(props)})`;
         this.logContainer.prepend(item);
 
-        if (this.ta) {
-            this.ta.track(eventName, props);
-            if (typeof this.ta.flush === 'function') this.ta.flush();
+        if (this.sdkInstance) {
+            // Context Switching: Identity
+            if (distinctIdOverride) {
+                this.sdkInstance.identify(distinctIdOverride);
+                // When distinctId is explicitly provided, we clear login to prioritize the guest identity
+                this.sdkInstance.logout();
+            } else {
+                this.sdkInstance.login(this.accountId);
+            }
+
+            this.sdkInstance.userSet({ nickname: this.nickname });
+            this.sdkInstance.track(eventName, props);
+            if (typeof this.sdkInstance.flush === 'function') this.sdkInstance.flush();
+        }
+    }
+
+    logSystem(message) {
+        const time = new Date().toLocaleTimeString();
+        const item = document.createElement('div');
+        item.className = 'log-entry log-system';
+        item.innerHTML = `[${time}] ⚡ ${message}`;
+        this.logContainer.prepend(item);
+    }
+
+    /* --- Core Engine --- */
+    createMatrix(w, h) {
+        const matrix = [];
+        while (h--) matrix.push(new Array(w).fill(0));
+        return matrix;
+    }
+
+    createPiece(type) {
+        if (type === 'T') return [[0, 0, 0], [1, 1, 1], [0, 1, 0]];
+        if (type === 'O') return [[2, 2], [2, 2]];
+        if (type === 'L') return [[0, 3, 0], [0, 3, 0], [0, 3, 3]];
+        if (type === 'J') return [[0, 4, 0], [0, 4, 0], [4, 4, 0]];
+        if (type === 'I') return [[0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0], [0, 5, 0, 0]];
+        if (type === 'S') return [[0, 6, 6], [6, 6, 0], [0, 0, 0]];
+        if (type === 'Z') return [[7, 7, 0], [0, 7, 7], [0, 0, 0]];
+    }
+
+    drawMatrix(matrix, offset) {
+        matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value !== 0) {
+                    this.context.fillStyle = this.colors[value];
+                    this.context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                    // block inner border
+                    this.context.fillStyle = 'rgba(0,0,0,0.1)';
+                    this.context.fillRect(x + offset.x + 0.1, y + offset.y + 0.1, 0.8, 0.8);
+                }
+            });
+        });
+    }
+
+    draw() {
+        // clear with tetris grid color
+        this.context.fillStyle = '#f8fafc';
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // draw board
+        this.drawMatrix(this.matrix, { x: 0, y: 0 });
+
+        // draw current piece
+        if (this.player.matrix) {
+            this.drawMatrix(this.player.matrix, this.player.pos);
+        }
+    }
+
+    merge() {
+        this.player.matrix.forEach((row, y) => {
+            row.forEach((value, x) => {
+                if (value !== 0) {
+                    this.matrix[y + this.player.pos.y][x + this.player.pos.x] = value;
+                }
+            });
+        });
+    }
+
+    collide() {
+        const m = this.player.matrix;
+        const o = this.player.pos;
+        for (let y = 0; y < m.length; ++y) {
+            for (let x = 0; x < m[y].length; ++x) {
+                if (m[y][x] !== 0 && (this.matrix[y + o.y] && this.matrix[y + o.y][x + o.x]) !== 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    playerDrop() {
+        this.player.pos.y++;
+        if (this.collide()) {
+            this.player.pos.y--;
+            this.merge();
+            this.playerReset();
+            this.arenaSweep();
+            this.updateScoreUI();
+        }
+        this.dropCounter = 0;
+    }
+
+    playerMove(dir) {
+        this.player.pos.x += dir;
+        if (this.collide()) {
+            this.player.pos.x -= dir;
+        }
+    }
+
+    playerReset() {
+        const pieces = 'ILJOTSZ';
+        this.player.matrix = this.createPiece(pieces[pieces.length * Math.random() | 0]);
+        this.player.pos.y = 0;
+        this.player.pos.x = (this.matrix[0].length / 2 | 0) - (this.player.matrix[0].length / 2 | 0);
+
+        if (this.collide()) {
+            this.matrix.forEach(row => row.fill(0)); // game over, clear board
+            this.trackEvent('game_over', {
+                final_score: this.player.score,
+                total_lines_cleared: this.player.totalLinesCleared
+            });
+            this.player.score = 0;
+            this.player.linesCleared = 0;
+            this.player.totalLinesCleared = 0;
+            this.updateScoreUI();
+
+            this.trackEvent('game_start', {
+                initial_difficulty: 'normal',
+                user_group: this.instanceId
+            });
+        }
+    }
+
+    playerRotate() {
+        const pos = this.player.pos.x;
+        let offset = 1;
+        // transpose & reverse
+        this.player.matrix.forEach((row, y) => {
+            for (let x = 0; x < y; ++x) {
+                [this.player.matrix[x][y], this.player.matrix[y][x]] = [this.player.matrix[y][x], this.player.matrix[x][y]];
+            }
+        });
+        this.player.matrix.forEach(row => row.reverse());
+
+        // Wall kick logic
+        while (this.collide()) {
+            this.player.pos.x += offset;
+            offset = -(offset + (offset > 0 ? 1 : -1));
+            if (offset > this.player.matrix[0].length) {
+                // reverse if failed
+                this.player.matrix.forEach(row => row.reverse());
+                this.player.matrix.forEach((row, y) => {
+                    for (let x = 0; x < y; ++x) {
+                        [this.player.matrix[x][y], this.player.matrix[y][x]] = [this.player.matrix[y][x], this.player.matrix[x][y]];
+                    }
+                });
+                this.player.pos.x = pos;
+                return;
+            }
+        }
+
+        // Custom Trigger Track
+        this.trackEvent('block_rotate', {
+            input_type: 'key',
+            current_score: this.player.score
+        });
+    }
+
+    arenaSweep() {
+        let rowCount = 1;
+        outer: for (let y = this.matrix.length - 1; y > 0; --y) {
+            for (let x = 0; x < this.matrix[y].length; ++x) {
+                if (this.matrix[y][x] === 0) continue outer;
+            }
+
+            // remove row
+            const row = this.matrix.splice(y, 1)[0].fill(0);
+            this.matrix.unshift(row);
+            ++y;
+
+            this.player.score += rowCount * 10;
+            rowCount *= 2;
+            this.player.linesCleared++;
+            this.player.totalLinesCleared++;
+        }
+
+        if (this.player.linesCleared > 0) {
+            this.trackEvent('line_clear', {
+                lines_cleared_combo: this.player.linesCleared,
+                current_score: this.player.score
+            });
+            this.player.linesCleared = 0;
+        }
+    }
+
+    updateScoreUI() {
+        if (this.scoreEl) this.scoreEl.innerText = this.player.score;
+        if (this.linesEl) this.linesEl.innerText = this.player.totalLinesCleared;
+    }
+
+    // Input handlers
+    handleInput(code) {
+        if (this.instanceId === 'A') {
+            switch (code) {
+                case 'KeyA': this.playerMove(-1); break;
+                case 'KeyD': this.playerMove(1); break;
+                case 'KeyS': this.playerDrop(); break;
+                case 'KeyW': this.playerRotate(); break;
+                case 'Space': this.playerRotate(); break;
+            }
+        } else {
+            switch (code) {
+                case 'ArrowLeft': this.playerMove(-1); break;
+                case 'ArrowRight': this.playerMove(1); break;
+                case 'ArrowDown': this.playerDrop(); break;
+                case 'ArrowUp': this.playerRotate(); break;
+                case 'Enter': this.playerRotate(); break;
+            }
+        }
+        this.draw();
+    }
+
+    update(time = 0) {
+        const deltaTime = time - this.lastTime;
+        this.lastTime = time;
+
+        this.dropCounter += deltaTime;
+        if (this.dropCounter > this.dropInterval) {
+            this.playerDrop();
+            this.draw(); // draw update after drop
         }
     }
 }
 
+// Global Games
 let gameA, gameB;
+let lastTime = 0;
 
 window.addEventListener('load', () => {
-    // Determine TA Instances (Wait for SDK init)
+    // Wait slightly to ensure thinkingdata is loaded if async
     setTimeout(() => {
-        const taA = window.taA || (window.thinkingdata && window.thinkingdata.userA) || null;
-        const taB = window.taB || (window.thinkingdata && window.thinkingdata.userB) || null;
+        gameA = new TetrisGame('A', 'user_a_tester', '유저A', 'canvasA', 'logsA', 'scoreA', 'linesA', window.ta_a ? window.ta_a : null);
+        gameB = new TetrisGame('B', 'user_b_tester', '유저B', 'canvasB', 'logsB', 'scoreB', 'linesB', window.ta_b ? window.ta_b : null);
 
-        gameA = new GameInstance(
-            'canvasA', 'logsA', taA,
-            { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', action: 'KeyE' },
-            ASSETS.heroA
-        );
+        gameA.trackEvent('game_start', { initial_difficulty: 'normal', user_group: 'A' });
+        gameB.trackEvent('game_start', { initial_difficulty: 'normal', user_group: 'B' });
 
-        gameB = new GameInstance(
-            'canvasB', 'logsB', taB,
-            { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', action: 'Space' },
-            ASSETS.heroB
-        );
+        gameA.draw();
+        gameB.draw();
 
-        gameA.logSystem('Zelda Engine A Load Complete - W/A/S/D');
-        gameB.logSystem('Zelda Engine B Load Complete - Arrows');
+        // Start global animation loop
+        requestAnimationFrame(gameLoop);
     }, 500);
 });
 
-// Global Keyboard Router
-window.addEventListener('keydown', (e) => {
+function gameLoop(time) {
+    if (gameA) gameA.update(time);
+    if (gameB) gameB.update(time);
+    requestAnimationFrame(gameLoop);
+}
+
+// Global Keyboard Listener
+document.addEventListener('keydown', (e) => {
     // Prevent default scrolling for arrows and space
-    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+    if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].indexOf(e.code) > -1) {
         e.preventDefault();
     }
-    if (gameA) gameA.handleKeyDown(e.code);
-    if (gameB) gameB.handleKeyDown(e.code);
-});
-
-window.addEventListener('keyup', (e) => {
-    if (gameA) gameA.handleKeyUp(e.code);
-    if (gameB) gameB.handleKeyUp(e.code);
+    if (gameA) gameA.handleInput(e.code);
+    if (gameB) gameB.handleInput(e.code);
 });
 
 // ==========================================
-// TE SDK In-App Message (Trigger) Listeners
+// Webhook Real-time Receiver (Polling)
 // ==========================================
+let bridgeLastTs = 0;
 
-// Both users listen for the exact same popup payload targeting their specific instance
+async function pollWebhookBridge() {
+    try {
+        const res = await fetch(`http://localhost:8788/latest?since=${bridgeLastTs}`, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !data.has_update) return;
 
-window.onTriggerMessageA = function (result) {
-    if (!result || !result.length) return;
-    const msg = result[0];
-    const params = msg.custom_params || {};
+        bridgeLastTs = Number(data.ts || Date.now());
+        console.log("🔥 Webhook received via Polling:", data);
 
-    document.getElementById('popupA-title').innerText = msg.title || params.title || 'Master Sword Discovered!';
-    document.getElementById('popupA-body').innerText = msg.content || params.body || 'You have unlocked a legendary item.';
-    document.getElementById('popupA-btn').innerText = msg.button_text || params.cta || 'Claim';
+        const params = data.params || {};
 
-    const popup = document.getElementById('popupA');
-    popup.style.display = 'flex';
-    popup.classList.remove('popup-bounce');
-    void popup.offsetWidth;
-    popup.classList.add('popup-bounce');
+        // Extract target identifiers robustly (including push_id for dashboard test sends)
+        const targetAccount = data.account_id || params.account_id || data.push_id || params.push_id;
+        const targetDistinctId = data.distinct_id || params.distinct_id || data.push_id || params.push_id;
+        const targetGroup = data.target_group || params.target_group || params.user_group;
 
-    if (gameA) gameA.logSystem('🎉 A/B Pop-up (User A) Received via In-App Message', '#3b82f6');
-};
+        // Popup config extracted robustly
+        const title = data.title || params.title || '축하합니다!';
+        const body = data.body || params.body || params.reward_text || '보상을 획득했습니다!';
+        const cta = data.cta || params.cta || params.button_text || '수령하기';
+        const reward = data.discount_rate || params.reward_amount || params.discount_rate || '100';
 
-window.onTriggerMessageB = function (result) {
-    if (!result || !result.length) return;
-    const msg = result[0];
-    const params = msg.custom_params || {};
+        // Diagnostic logging for A/B testing routing
+        console.log(`[Webhook Router] Parsing target payload...`);
+        console.log(`[Webhook Router] Incoming: account=${targetAccount}, distinct=${targetDistinctId}, group=${targetGroup}`);
 
-    document.getElementById('popupB-title').innerText = msg.title || params.title || 'Hylian Shield Discovered!';
-    document.getElementById('popupB-body').innerText = msg.content || params.body || 'You have unlocked a legendary item.';
-    document.getElementById('popupB-btn').innerText = msg.button_text || params.cta || 'Claim';
+        const distA = gameA && gameA.sdkInstance ? gameA.sdkInstance.getDistinctId() : 'undefined';
+        const distB = gameB && gameB.sdkInstance ? gameB.sdkInstance.getDistinctId() : 'undefined';
+        console.log(`[Webhook Router] Current SDK States - A: ${distA} | B: ${distB}`);
 
-    const popup = document.getElementById('popupB');
-    popup.style.display = 'flex';
-    popup.classList.remove('popup-bounce');
-    void popup.offsetWidth;
-    popup.classList.add('popup-bounce');
+        // Check if webhook is intended for User A
+        let isUserA = targetGroup === 'A' || targetAccount === 'user_a_tester';
+        if (targetDistinctId && distA === targetDistinctId) {
+            isUserA = true;
+            console.log(`[Webhook Router] Match resolving to A via distinct_id`);
+        }
 
-    if (gameB) gameB.logSystem('🎉 A/B Pop-up (User B) Received via In-App Message', '#10b981');
-};
+        // Check if webhook is intended for User B
+        let isUserB = targetGroup === 'B' || targetAccount === 'user_b_tester';
+        if (targetDistinctId && distB === targetDistinctId) {
+            isUserB = true;
+            console.log(`[Webhook Router] Match resolving to B via distinct_id`);
+        }
+
+        if (isUserA) {
+            showWebhookPopup('popupA', title, body, reward, cta);
+            if (gameA) {
+                gameA.trackEvent('popup_open', {
+                    popup_type: 'webhook_reward',
+                    target_account: targetAccount || 'user_a_tester',
+                    target_distinct_id: targetDistinctId || undefined
+                }, targetDistinctId);
+                gameA.logSystem(`웹훅 수신 완료 (User A)`);
+            }
+        } else if (isUserB) {
+            showWebhookPopup('popupB', title, body, reward, cta);
+            if (gameB) {
+                gameB.trackEvent('popup_open', {
+                    popup_type: 'webhook_reward',
+                    target_account: targetAccount || 'user_b_tester',
+                    target_distinct_id: targetDistinctId || undefined
+                }, targetDistinctId);
+                gameB.logSystem(`웹훅 수신 완료 (User B)`);
+            }
+        } else {
+            // If no specific target is provided (e.g. generic dashboard test), display for User A (Primary) by default
+            showWebhookPopup('popupA', title, body, reward, cta);
+            if (gameA) {
+                gameA.trackEvent('popup_open', {
+                    popup_type: 'webhook_reward',
+                    target_account: targetAccount || 'global_test',
+                    target_distinct_id: targetDistinctId || undefined
+                }, targetDistinctId);
+                gameA.logSystem(`글로벌 웹훅 수신 완료 -> A 화면 표시`);
+            }
+        }
+    } catch (err) {
+        // silently ignore network poll errors
+    }
+}
+
+// Start polling
+setInterval(pollWebhookBridge, 1000);
+
+function showWebhookPopup(popupId, title, body, reward, cta) {
+    const titleEl = document.getElementById(popupId + '-title');
+    const bodyEl = document.getElementById(popupId + '-body');
+    const btnEl = document.getElementById(popupId + '-btn');
+
+    if (titleEl) titleEl.innerText = title;
+    if (bodyEl) bodyEl.innerHTML = `${body}<br><br><span style="color:var(--color-${popupId === 'popupA' ? 'a' : 'b'}); font-weight:bold;">${reward} Points</span>`;
+    if (btnEl) btnEl.innerText = cta;
+
+    document.getElementById(popupId).style.display = 'flex';
+}
+
+function closeWebhookPopup(popupId) {
+    document.getElementById(popupId).style.display = 'none';
+
+    const instance = popupId === 'popupA' ? gameA : gameB;
+    if (instance) {
+        instance.logSystem(`🎯 팝업 닫힘`);
+    }
+}

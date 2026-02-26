@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <div id="output" style="font-size: 24px; font-family: monospace; white-space: pre-wrap; word-break: break-all;">
+    </div>
+    <script src="./thinkingdata.umd.min.js"></script>
+    <script>
+        setTimeout(() => {
+            // Initialize main instance
+            window.thinkingdata.init({
+                appId: 'd7b28cf45e4c4a75a7d811a5a61c85bc',
+                serverUrl: 'https://te-receiver-naver.thinkingdata.kr',
+                enableLog: false,
+                send_method: 'ajax'
+            });
+
+            let out = "DUMPING SDK STRUCTURE:\n";
+            try {
+                // Try to create child/light instances
+                window.ta_a = window.thinkingdata; // Main instance acts as A
+                if (typeof window.thinkingdata.initInstance === 'function') {
+                    window.ta_b = window.thinkingdata.initInstance('ta_b');
+                    out += "Used initInstance('ta_b')\n";
+                } else if (typeof window.thinkingdata.createLightInstance === 'function') {
+                    window.ta_b = window.thinkingdata.createLightInstance();
+                    out += "Used createLightInstance()\n";
+                } else {
+                    out += "NO MULTI-INSTANCE METHOD FOUND on window.thinkingdata!\n";
+                }
+                
+                out += "ta_a getDistinctId exists? " + (window.ta_a && typeof window.ta_a.getDistinctId === 'function') + "\n";
+                out += "ta_b exists? " + !!window.ta_b + "\n";
+                if (window.ta_b) {
+                   out += "ta_b getDistinctId exists? " + (typeof window.ta_b.getDistinctId === 'function') + "\n";
+                }
+            } catch(e) {
+                out += "ERROR: " + e.message + "\n";
+            }
+
+            document.getElementById('output').innerText = out;
+        }, 500);
+    </script>
+</body>
+
+</html>

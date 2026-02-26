@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><body>
+<script src="thinkingdata.umd.min.js"></script>
+<script>
+    setTimeout(() => {
+        let out = "";
+        try {
+            var ta_a = Object.create(window.thinkingdata);
+            ta_a.init({appId:'1', serverUrl:'1', persistenceName: 'ta_a'});
+            
+            var ta_b = Object.create(window.thinkingdata);
+            ta_b.init({appId:'1', serverUrl:'1', persistenceName: 'ta_b'});
+            
+            out += "ta_a getDistinctId: " + ta_a.getDistinctId() + "\n";
+            out += "ta_b getDistinctId: " + ta_b.getDistinctId() + "\n";
+            out += "Are they different? " + (ta_a.getDistinctId() !== ta_b.getDistinctId()) + "\n";
+        } catch(e) {
+            out += "Error: " + e.message;
+        }
+        document.body.innerText = out;
+    }, 500);
+</script>
+</body></html>
