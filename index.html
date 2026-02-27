@@ -9,693 +9,278 @@
         rel="stylesheet">
     <style>
         :root {
-            --primary-blue: #1C51F2;
-            --primary-hover: #1542ca;
+            --bg-base: #FFFFFF;
+            --surface-color: #FFFFFF;
             --text-main: #111827;
             --text-muted: #6B7280;
+            --primary-blue: #1C51F2;
+            --primary-hover: #1542ca;
             --border-color: #E6E8EB;
-            --sidebar-bg: #F8FAFC;
-            --surface: #FFFFFF;
-            --hover-bg: #F3F4F6;
-            --active-bg: #EFF4FF;
+            --hover-bg: #F9FAFB;
         }
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
         body {
-            background-color: var(--surface);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-base);
             color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            align-items: center;
         }
 
-        /* Top Nav - Level 1 */
+        /* Top Navigation Bar */
         .top-nav {
-            height: 60px;
+            width: 100%;
+            height: 64px;
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            background: var(--surface);
-            flex-shrink: 0;
+            padding: 0 40px;
+            z-index: 100;
         }
 
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 700;
+        .nav-logo {
             font-size: 1.25rem;
+            font-weight: 700;
             color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
             text-decoration: none;
             letter-spacing: -0.5px;
         }
 
-        .logo-icon {
+        .nav-logo-icon {
             color: var(--primary-blue);
-            font-size: 1.5rem;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
         }
 
-        .search-bar {
-            position: relative;
-            width: 380px;
-            margin-left: 20px;
+        .portal-container {
+            max-width: 1000px;
+            width: 90%;
+            padding: 80px 0 100px;
         }
 
-        .search-bar input {
-            width: 100%;
-            padding: 10px 16px 10px 40px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: var(--sidebar-bg);
-            font-size: 0.9rem;
-            color: var(--text-main);
-            outline: none;
-            transition: all 0.2s;
+        .header-section {
+            text-align: center;
+            margin-bottom: 64px;
         }
 
-        .search-bar input:focus {
-            border-color: var(--primary-blue);
-            background: white;
-            box-shadow: 0 0 0 3px rgba(28, 81, 242, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9CA3AF;
-            width: 18px;
-            height: 18px;
-        }
-
-        .search-shortcut {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.75rem;
-            color: #9CA3AF;
-            background: #E5E7EB;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .ask-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            background: white;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .ask-btn:hover {
-            background: var(--hover-bg);
-        }
-
-        .lang-selector {
-            font-size: 0.9rem;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .btn-login {
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-login:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Top Nav - Level 2 */
-        .sub-nav {
-            height: 52px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            padding: 0 32px;
-            gap: 40px;
-            background: var(--surface);
-            flex-shrink: 0;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-            position: relative;
-            z-index: 10;
-        }
-
-        .sub-nav-item {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 500;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-            transition: color 0.2s;
-        }
-
-        .sub-nav-item:hover {
-            color: var(--text-main);
-        }
-
-        .sub-nav-item.active {
+        .tagline {
+            display: inline-block;
             color: var(--primary-blue);
-            font-weight: 600;
-        }
-
-        .sub-nav-item.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--primary-blue);
-        }
-
-        /* Layout containing sidebar and main content */
-        .layout-container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            background: var(--surface);
-        }
-
-        /* Left Sidebar */
-        .sidebar {
-            width: 280px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
-            overflow-y: auto;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 18px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #EFF4FF;
-            color: var(--primary-blue);
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            margin: 12px 12px 0;
-            border-radius: 8px;
-        }
-
-        .sidebar-group {
-            padding: 12px;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-item {
-            display: flex;
-            align-items: center;
-            padding: 10px 16px;
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 0.95rem;
-            border-radius: 6px;
-            margin-bottom: 2px;
-            transition: background 0.2s;
-            font-weight: 500;
-        }
-
-        .sidebar-item:hover {
-            background: #E5E7EB;
-        }
-
-        .sidebar-item.active {
-            background: white;
-            color: var(--primary-blue);
-            font-weight: 600;
-        }
-
-        .sub-menu {
-            list-style: none;
-            padding-left: 28px;
-            margin-top: 4px;
-            margin-bottom: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .sub-menu-item {
-            display: block;
-            padding: 8px 12px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .sub-menu-item:hover {
-            background: #E5E7EB;
-            color: var(--text-main);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 48px 80px;
-        }
-
-        .content-container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .breadcrumb {
             font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .ai-summary {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: white;
-            border: 1px solid var(--border-color);
-            padding: 4px 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            background: #EFF4FF;
+            padding: 6px 14px;
             border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
         }
 
         h1 {
-            font-size: 2.4rem;
+            font-size: 3rem;
             font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 32px;
+            margin: 0;
+            line-height: 1.2;
             letter-spacing: -1px;
-        }
-
-        .intro-text {
-            font-size: 1.05rem;
-            line-height: 1.7;
             color: var(--text-main);
-            margin-bottom: 24px;
         }
 
-        .info-box {
-            background: #F0FDF4;
-            /* light green background from the image */
-            border-left: 4px solid #22C55E;
-            padding: 24px;
-            border-radius: 0 8px 8px 0;
-            margin-top: 40px;
-            margin-bottom: 40px;
-        }
-
-        .info-box h4 {
-            color: #166534;
-            margin-bottom: 8px;
+        p.subtitle {
             font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .info-box p {
-            color: #166534;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary-blue);
-            margin: 48px 0 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-title span.num {
-            color: var(--text-main);
-        }
-
-        /* Demo Links List */
-        .demo-list {
-            list-style: none;
-            margin-bottom: 32px;
-            padding-left: 8px;
-        }
-
-        .demo-list li {
-            position: relative;
-            padding-left: 20px;
-            margin-bottom: 16px;
-            font-size: 1rem;
-            line-height: 1.6;
             color: var(--text-muted);
+            line-height: 1.6;
+            margin: 20px auto 0;
+            max-width: 600px;
+            font-weight: 400;
         }
 
-        .demo-list li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 10px;
-            width: 6px;
-            height: 6px;
-            background: #9CA3AF;
-            border-radius: 50%;
-        }
-
-        .demo-list li a {
-            color: var(--primary-blue);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .demo-list li a:hover {
-            text-decoration: underline;
-        }
-
-        .demo-list strong {
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        /* Demo Cards in Content */
-        .demo-cards-wrapper {
+        /* Cards Grid */
+        .cards-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 24px;
-            margin-top: 24px;
         }
 
-        .demo-card {
+        /* Card Styles */
+        .mode-card {
+            background: var(--surface-color);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 24px;
+            padding: 32px;
             text-decoration: none;
-            display: block;
-            transition: all 0.2s;
-            background: white;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        .demo-card:hover {
-            border-color: var(--primary-blue);
-            box-shadow: 0 4px 12px rgba(28, 81, 242, 0.1);
+        .mode-card:hover {
             transform: translateY(-2px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 8px 24px rgba(28, 81, 242, 0.08);
         }
 
         .card-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+            justify-content: space-between;
+            margin-bottom: 24px;
         }
 
         .card-icon {
+            width: 48px;
+            height: 48px;
+            background: #EFF4FF;
             color: var(--primary-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .demo-card h3 {
-            font-size: 1.15rem;
-            color: var(--text-main);
+        .card-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .card-badge {
+            background: #F3F4F6;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
             font-weight: 600;
         }
 
-        .demo-card p {
+        .mode-card:hover .card-badge {
+            background: #EFF4FF;
+            color: var(--primary-blue);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .card-desc {
             color: var(--text-muted);
             font-size: 0.95rem;
-            line-height: 1.5;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .card-action {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            color: var(--primary-blue);
+            font-size: 0.95rem;
+            font-weight: 600;
+            gap: 6px;
+        }
+
+        .card-action::after {
+            content: '→';
+            transition: transform 0.2s;
+        }
+
+        .mode-card:hover .card-action::after {
+            transform: translateX(4px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-card {
+                padding: 24px;
+            }
         }
     </style>
 </head>
 
 <body>
-
-    <!-- Top Navigation -->
     <div class="top-nav">
-        <div class="nav-left">
-            <a href="#" class="logo">
-                <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
-                        <path
-                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6zm4 4h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                    </svg>
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6zm4 4h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                </svg>
+            </div>
+            ThinkingData
+        </a>
+    </div>
+
+    <div class="portal-container">
+        <div class="header-section">
+            <div class="tagline">Live Presentation Setup</div>
+            <h1>B2B Solutions Showcase</h1>
+            <p class="subtitle">Experience real-time data flows, precision targeting, and the impact of our Webhook and
+                A/B Testing capabilities directly in a live environment.</p>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Webhook Mode -->
+            <a href="webhook-test.html" class="mode-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="card-badge">Engagement</div>
                 </div>
-                ThinkingData
+                <div class="card-title">Real-time Webhook</div>
+                <div class="card-desc">
+                    로컬 시스템과 ThinkingData 간의 실시간 Webhook 수신을 시연합니다. 유저 행동 기반의 즉각적인 인앱 팝업 프로모션 및 보상 지급 시나리오를 확인할 수 있습니다.
+                </div>
+                <div class="card-action">Launch Interactive Demo</div>
             </a>
 
-            <div class="search-bar">
-                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <input type="text" placeholder="검색...">
-                <div class="search-shortcut">⌘ K</div>
-            </div>
-        </div>
-
-        <div class="nav-right">
-            <button class="ask-btn">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z">
-                    </path>
-                </svg>
-                Ask
-            </button>
-            <div class="lang-selector">
-                🇰🇷 한국어
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </div>
-            <button class="btn-login">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
-                로그인
-            </button>
-        </div>
-    </div>
-
-    <!-- Sub Navigation -->
-    <div class="sub-nav">
-        <a href="#" class="sub-nav-item">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
-                </path>
-            </svg>
-            문서
-        </a>
-        <a href="#" class="sub-nav-item active">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-            </svg>
-            개발자
-        </a>
-        <a href="#" class="sub-nav-item">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            버전 설명
-        </a>
-        <a href="#" class="sub-nav-item">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
-                </path>
-            </svg>
-            용어 사전
-        </a>
-    </div>
-
-    <div class="layout-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                데이터 연동
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </div>
-
-            <div class="sidebar-group">
-                <ul class="sidebar-menu">
-                    <li>
-                        <a href="#" class="sidebar-item active">데이터 이벤트 데모</a>
-                        <ul class="sub-menu">
-                            <li><a href="webhook-test.html" class="sub-menu-item">Webhook 프로모션</a></li>
-                            <li><a href="client-test.html" class="sub-menu-item">A/B 타겟팅 스플릿</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#" class="sidebar-item">연동 가이드</a></li>
-                    <li><a href="#" class="sidebar-item">고급 데이터 유형</a></li>
-                    <li>
-                        <a href="#" class="sidebar-item" style="display: flex; justify-content: space-between;">
-                            개발자 문서
-                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                                </path>
-                            </svg>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="content-container">
-                <div class="breadcrumb">
-                    <span>데이터 연동</span>
-                    <div class="ai-summary">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Client A/B Test Mode -->
+            <a href="client-test.html" class="mode-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z">
-                            </path>
-                        </svg>
-                        요약
-                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
                             </path>
                         </svg>
                     </div>
+                    <div class="card-badge">A/B Testing</div>
                 </div>
-
-                <h1>데이터 연동 데모</h1>
-
-                <p class="intro-text">
-                    이 섹션에서는 ThinkingData의 핵심 데이터 연동 기능과 실시간 타겟팅 시나리오를 직접 시연할 수 있도록 구성된 라이브 데모를 제공합니다:
-                </p>
-
-                <ul class="demo-list">
-                    <li><strong>실시간 Webhook 수신</strong> : 유저 행동 데이터를 기반으로 즉각적인 피드백을 발생시킵니다.</li>
-                    <li><strong>클라이언트 A/B 테스트</strong> : 멀티 인스턴스 환경에서 타겟 그룹별 맞춤형 경험을 제공합니다.</li>
-                </ul>
-
-                <p class="intro-text">
-                    각 데모 모듈을 통해 설정된 조건이 클라이언트 상에서 어떻게 반응하고 최적화되는지 몇 분 동안 꼼꼼히 테스트해보는 것을 추천합니다.
-                </p>
-
-                <h2 class="section-title">
-                    <span class="num">1.</span> <a href="webhook-test.html"
-                        style="color: inherit; text-decoration: none;">Webhook 실시간 연동</a>
-                </h2>
-
-                <ul class="demo-list">
-                    <li><a href="webhook-test.html">프로모션 조건 감지</a> : Webhook 알림을 로컬 시스템에서 수신 후 사용자에게 즉시 알립니다.</li>
-                    <li><a href="webhook-test.html">이벤트 발동 규칙</a> : 레벨업, 결제 등 특정 액션 트리거 기반으로 팝업 프로모션을 진행합니다.</li>
-                </ul>
-
-                <h2 class="section-title">
-                    <span class="num">2.</span> <a href="client-test.html"
-                        style="color: inherit; text-decoration: none;">A/B 타겟팅 스플릿 가이드</a>
-                </h2>
-
-                <ul class="demo-list">
-                    <li><a href="client-test.html">유저 그룹 (A/B)</a> : 두 개의 클라이언트 인스턴스 간 분리된 데이터를 동시 처리합니다.</li>
-                    <li><a href="client-test.html">개인화 페이로드</a> : 유저 속성(Distinct ID)에 따라 각기 다른 이벤트를 수신하는 시나리오입니다.</li>
-                </ul>
-
-                <div class="demo-cards-wrapper">
-                    <a href="webhook-test.html" class="demo-card">
-                        <div class="card-header">
-                            <svg class="card-icon" width="24" height="24" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                            <h3>Real-time Webhook Demo</h3>
-                        </div>
-                        <p>즉각적인 인앱 팝업 프로모션 및 보상 지급 시나리오 실행하기.</p>
-                    </a>
-                    <a href="client-test.html" class="demo-card">
-                        <div class="card-header">
-                            <svg class="card-icon" width="24" height="24" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                                </path>
-                            </svg>
-                            <h3>A/B Testing Demo</h3>
-                        </div>
-                        <p>A군과 B군에게 완벽하게 타겟팅된 서로 다른 이벤트 페이로드 확인하기.</p>
-                    </a>
+                <div class="card-title">Targeted Segmentation</div>
+                <div class="card-desc">
+                    멀티 인스턴스 환경에서, 조건이 다른 유저(A군과 B군)에게 완벽하게 타겟팅된 서로 다른 이벤트 페이로드가 전달되는 A/B 스플릿 테스트를 경험해 보세요.
                 </div>
-
-                <div class="info-box">
-                    <h4>지원 및 문의</h4>
-                    <p>데모 시연 중 발생한 데이터나 시스템 작동 원리에 대해 궁금한 점이 있거나 도움이 필요하면, 언제든지 담당 매니저에게 문의해 주세요.</p>
-                </div>
-
-            </div>
+                <div class="card-action">Launch Interactive Demo</div>
+            </a>
         </div>
     </div>
-
 </body>
 
 </html>
