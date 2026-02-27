@@ -66,8 +66,7 @@ function drawMatrix(matrix, offset) {
 }
 
 function draw() {
-  context.fillStyle = '#34495e';
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.clearRect(0, 0, canvas.width, canvas.height);
   drawMatrix(matrix, { x: 0, y: 0 });
   drawMatrix(player.matrix, player.pos);
 }
@@ -179,7 +178,18 @@ function arenaSweep() {
 
     // TRIGGER logic - check if we reached trigger level equivalent
     if (totalLinesCleared >= currentConfig.promo_trigger_level) {
-      logSystem(`🎯 <strong>Trigger Condition Met:</strong> ${totalLinesCleared} Lines 도달. TE 콘솔 발송 대기 상태`, '#c4b5fd');
+      // logSystem(`🎯 <strong>Trigger Condition Met:</strong> ${totalLinesCleared} Lines 도달. TE 콘솔 발송 대기 상태`, '#c4b5fd');
+      logSystem(`[TE Webhook] <strong>${currentConfig.promo_trigger_level}</strong> 라인 도달! TE 엔진 조건 만족`, '#0ea5e9');
+      const isHighScorer = score > 1000; // Example condition
+      setTimeout(() => {
+        logServerWebhook(`🚀 [Discount Engine] Calculate personalized discount...<br/>Score: ${score} => Base Discount<br/>Target: -20% Default`);
+        const targetRate = isHighScorer ? 50 : 20;
+
+        setTimeout(() => {
+          logServerWebhook(`✅ [Push Delivery] Server ➡️ Client<br/>Discount: ${targetRate}%<br/>Push ID: WEBHOOK_P${Date.now()}`);
+          logSystem('🎁 <strong>[Client]</strong> 맞춤 타겟팅 웹훅 푸시를 수신했습니다!', '#10b981');
+        }, 500);
+      }, 500);
       onClickStore();
       totalLinesCleared = 0; // reset for repeated triggers
     }
@@ -224,10 +234,10 @@ function extractClientParams(payload) {
 
 function applyClientChannelMessage(payload) {
   const params = extractClientParams(payload);
-  const title = params.title || params.msg_title || '지금 구매 시 더 많은 스코어 인정';
-  const body = params.body || params.msg_body || '라인 클리어 폭탄 50% 할인!';
-  const cta = params.cta || params.button_text || '확인하기';
-  const rate = Number(params.discount_rate);
+  const title = params.title || params.msg_title || payload.title || '지금 구매 시 더 많은 스코어 인정';
+  const body = params.body || params.msg_body || payload.body || '라인 클리어 폭탄 50% 할인!';
+  const cta = params.cta || params.button_text || payload.cta || '확인하기';
+  const rate = Number(params.discount_rate || payload.discount_rate);
   if (Number.isFinite(rate)) activePromoDiscountRate = rate;
 
   const popup = document.getElementById('promo-popup');
@@ -248,7 +258,7 @@ function applyClientChannelMessage(payload) {
     popup.classList.add('popup-bounce');
   }
 
-  logSystem(`📩 <strong>Client Channel Received:</strong> title=${title}, cta=${cta}`, '#4ade80');
+  logSystem(`📩 <strong>Client Channel Received:</strong> title=${title}, cta=${cta}`, '#059669');
 }
 
 function handleStrategyTriggerMessage(result) {
@@ -260,7 +270,7 @@ function handleStrategyTriggerMessage(result) {
     channel_msg_type: result.channelMsgType
   });
   applyClientChannelMessage(merged);
-  logSystem(`🧩 <strong>TriggerListener:</strong> pushId=${result.pushId || 'n/a'}, channelMsgType=${result.channelMsgType || 'n/a'}`, '#34d399');
+  logSystem(`🧩 <strong>TriggerListener:</strong> pushId=${result.pushId || 'n/a'}, channelMsgType=${result.channelMsgType || 'n/a'}`, '#047857');
 }
 
 function flushPendingTriggerMessages() {
@@ -380,14 +390,14 @@ function logEvent(name, props) {
 }
 
 window.onSDKLoad = function () {
-  logSystem('✅ <strong>SDK Success:</strong> ThinkingData Web SDK가 정상 로드되었습니다.', '#22c55e');
+  logSystem('✅ <strong>SDK Success:</strong> ThinkingData Web SDK가 정상 로드되었습니다.', '#16a34a');
   if (window.ta && typeof window.ta.getDistinctId === 'function') {
-    logSystem(`🆔 <strong>Device Distinct ID:</strong> ${window.ta.getDistinctId()}`, '#a5b4fc');
+    logSystem(`🆔 <strong>Device Distinct ID:</strong> ${window.ta.getDistinctId()}`, '#6366f1');
   }
   const storedUrl = getWebhookUrl();
   if (!storedUrl || !storedUrl.startsWith('http')) {
     setWebhookUrl(DEFAULT_WEBHOOK_URL);
-    logSystem(`🧭 <strong>Webhook URL Auto-Fix:</strong> ${DEFAULT_WEBHOOK_URL}`, '#38bdf8');
+    logSystem(`🧭 <strong>Webhook URL Auto-Fix:</b> ${DEFAULT_WEBHOOK_URL}`, '#0284c7');
   }
   renderWebhookUrl();
   updateUI();
@@ -406,11 +416,13 @@ window.onTriggerMessage = handleStrategyTriggerMessage;
 function updateUI() {
   document.getElementById('score').innerText = score;
   document.getElementById('lines').innerText = linesCleared;
+  logSystem(`=== USER properties ===<br/>nickname: "Demo User"<br/>vip_level: "Gold"<br/>total_spent: 15400`, '#0ea5e9');
 }
 
 function onClickStore() {
   document.getElementById('store-modal').style.display = 'flex';
   logEvent('open_store', { current_score: score, lines: linesCleared });
+  logSystem('🛒 <strong>[Store Open]</strong> 상점에 진입했습니다.', '#10b981');
 }
 
 function closeStore() { document.getElementById('store-modal').style.display = 'none'; }
@@ -448,16 +460,6 @@ function saveWebhookConfig() {
   alert('Webhook URL 저장 완료');
 }
 
-function startSalesDemoMode() {
-  setWebhookUrl(DEFAULT_WEBHOOK_URL);
-  renderWebhookUrl();
-  bridgeLastTs = 0;
-  bridgeSeenPushId = '';
-  bridgeArmedAt = Date.now();
-  currentConfig.promo_trigger_level = 3; // For demo, trigger after 3 lines instead of 7
-  logSystem('🚀 <strong>Sales Demo Mode:</strong> 데모 시작! 3줄 클리어 시 트리거 발동 설정완료', '#22c55e');
-  void pollWebhookBridge();
-}
 
 function closePromo() {
   document.getElementById('promo-popup').style.display = 'none';
@@ -478,23 +480,4 @@ function applyPromo() {
   logEvent('promo_applied', { promo_id: 'special_discount', discount_rate: discountRate, type: 'payment_push' });
   alert('패키지 적용 완료: 폭탄 가격이 할인되었습니다.');
   onClickStore();
-}
-
-function sendLineClearTwice() {
-  const payload = { lines: 1, score_awarded: 10, total_score: score, total_lines: linesCleared + 1 };
-  logEvent('line_clear', payload);
-  logEvent('line_clear', payload);
-  logSystem('⚡ <strong>Trigger Helper:</strong> line_clear 이벤트 2회 즉시 전송', '#f59e0b');
-}
-
-function force10Rotates() {
-  for (let i = 0; i < 10; i++) {
-    logEvent('block_rotate', { input_type: 'auto', current_score: score });
-  }
-  logSystem('⚡ <strong>Trigger Helper:</strong> block_rotate 이벤트 10회 즉시 전송 완료!', '#f59e0b');
-}
-
-function sendTriggerEvent() {
-  logEvent('trigger_event', { input_type: 'manual', current_score: score });
-  logSystem('🎯 <strong>Manual Trigger:</strong> trigger_event 이벤트 1회 전송 완료!', '#3b82f6');
 }
